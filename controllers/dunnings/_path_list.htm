@@ -1,0 +1,40 @@
+<?php if (count($paths)): ?>
+    <div class="list-preview">
+        <div class="control-list list-unresponsive">
+            <table class="table data" data-control="rowlink">
+                <thead>
+                    <tr>
+                        <th><span>Step</span></th>
+                        <th style="width: 10%"><span></span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($paths as $path): ?>
+                        <tr>
+                            <td>
+                                <a
+                                    href="javascript:;"
+                                    data-control="popup"
+                                    data-handler="onUpdatePathForm"
+                                    data-request-data="path_mode: 1, record_id: '<?= $path->id ?>', _session_key: '<?= $this->formGetSessionKey() ?>'"
+                                    data-size="large">
+                                    <?= e($path->description) ?>
+                                </a>
+                            </td>
+                            <td class="nolink text-right">
+                                <a
+                                    href="javascript:;"
+                                    data-request="onDeletePath"
+                                    data-request-data="path_mode: 1, record_id: '<?= $path->id ?>', _session_key: '<?= $this->formGetSessionKey() ?>'"
+                                    data-request-confirm="Delete this step?"
+                                    class="oc-icon-remove"
+                                    data-toggle="tooltip"
+                                    title="Remove"></a>
+                            </td>
+                        </tr>
+                    <?php endforeach ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+<?php endif ?>

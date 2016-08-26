@@ -1,0 +1,23 @@
+# ===================================
+#  List Column Definitions
+# ===================================
+
+columns:
+    description:
+        label: Description
+
+    failed_attempts:
+        label: Retry Attempt
+
+    plan:
+        label: Dunning Plan
+
+    status:
+        label: Status Change
+
+    user_template:
+        label: User Message Template
+
+    admin_template:
+        label: Admin Message Template
+

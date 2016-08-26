@@ -1,0 +1,12 @@
+# ===================================
+#  Form Field Definitions
+# ===================================
+
+fields:
+    name:
+        label: Name
+
+    paths:
+        label: Dunning steps
+        type: partial
+        path: field_paths

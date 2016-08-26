@@ -1,0 +1,27 @@
+# ===================================
+#  Form Behavior Config
+# ===================================
+
+# Record name
+name: Dunning Strategy
+
+# Model Form Field configuration
+form: $/responsiv/subscribe/models/dunningplan/fields.yaml
+
+# Model Class name
+modelClass: Responsiv\Subscribe\Models\DunningPlan
+
+# Default redirect location
+defaultRedirect: responsiv/subscribe/dunnings
+
+# Create page
+create:
+    title: Create Dunning Strategy
+    redirect: responsiv/subscribe/dunnings/update/:id
+    redirectClose: responsiv/subscribe/dunnings
+
+# Update page
+update:
+    title: Edit Dunning Strategy
+    redirect: responsiv/subscribe/dunnings
+    redirectClose: responsiv/subscribe/dunnings

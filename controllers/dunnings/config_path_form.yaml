@@ -1,0 +1,27 @@
+# ===================================
+#  Form Behavior Config
+# ===================================
+
+# Record name
+name: Step
+
+# Model Form Field configuration
+form: $/responsiv/subscribe/models/dunningpath/fields.yaml
+
+# Model Class name
+modelClass: Responsiv\Subscribe\Models\DunningPath
+
+# Default redirect location
+defaultRedirect: responsiv/subscribe/dunnings
+
+# Create page
+create:
+    title: Create Dunning Step
+    redirect: responsiv/subscribe/dunnings/update/:id
+    redirectClose: responsiv/subscribe/dunnings
+
+# Update page
+update:
+    title: Edit Dunning Step
+    redirect: responsiv/subscribe/dunnings
+    redirectClose: responsiv/subscribe/dunnings

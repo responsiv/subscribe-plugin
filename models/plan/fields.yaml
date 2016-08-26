@@ -1,0 +1,128 @@
+# ===================================
+#  Form Field Definitions
+# ===================================
+
+fields:
+    name:
+        tab: Plan
+        span: auto
+        tab: Schedule
+        label: Name
+
+    code:
+        tab: Plan
+        span: auto
+        label: API Code
+        comment: You can use the API Code for accessing the plan via the API.
+
+tabs:
+    fields:
+
+        price:
+            tab: General
+            label: Price
+            comment: Enter the price for each renewal of this subscription.
+            type: number
+            span: left
+
+        setup_price:
+            tab: General
+            label: Setup Fee
+            comment: A one time fee for creating a subscription.
+            type: number
+            span: right
+
+        dunning_plan:
+            tab: General
+            label: Dunning plan
+            comment: If you wish to use a dunning plan, select it here.
+            type: relation
+
+        plan_type:
+            tab: Schedule
+            label: Membership Schedule
+            comment: Please choose a frequency the subscription will be renewed.
+            type: dropdown
+            default: monthly
+            span: left
+
+        plan_day_interval:
+            tab: Schedule
+            label: Renewal interval, days
+            comment: Number of days the subscription should run before next renewal.
+            dependsOn: plan_type
+            type: number
+            span: right
+
+        plan_month_interval:
+            tab: Schedule
+            label: Renewal interval, months
+            comment: Number of months the subscription should run before next renewal.
+            dependsOn: plan_type
+            type: number
+            span: right
+
+        renewal_period:
+            tab: Schedule
+            label: Renewal period
+            comment: Number of renewal periods before the subscription ends. Leave the field empty for unlimited renewals.
+            dependsOn: plan_type
+            type: number
+            span: right
+
+        plan_year_interval:
+            tab: Schedule
+            label: Renewal interval, years
+            comment: Number of years the subscription should run before next renewal.
+            dependsOn: plan_type
+            type: number
+            span: right
+
+        plan_monthly_behavior:
+            tab: Schedule
+            label: Monthly Behavior
+            comment: Please select a monthly behavior for the subscription renewal.
+            type: radio
+            dependsOn: plan_type
+
+        plan_month_day:
+            tab: Schedule
+            label: Day of month
+            comment: Please choose a month day the subscription will be renewed on.
+            type: dropdown
+            dependsOn: [plan_type, plan_monthly_behavior]
+
+        invoice_advance_days:
+            tab: Schedule
+            span: auto
+            label: Invoice in advance, days
+            comment: Number of days before renewal cycle date to send invoice notification.
+            type: number
+
+        invoice_advance_days_interval:
+            tab: Schedule
+            span: auto
+            label: Invoice in advance interval, days
+            comment: Number of days between invoice notifications. Leave blank to send only once.
+            type: number
+
+        grace_period:
+            tab: Periods
+            span: left
+            label: Grace period, days
+            comment: Enter the number of days subscription will stay active after it has expired. Leave the field empty to cancel the grace period.
+            type: number
+
+        is_grace_on_renewal:
+            tab: Periods
+            span: right
+            label: Grace period starts only on renewal invoice
+            comment: Only give the user a grace period when they have renewed one or more times.
+            type: checkbox
+
+        trial_period:
+            tab: Periods
+            span: left
+            label: Trial period, days
+            comment: Leave the field empty to cancel the trial period.
+            type: number

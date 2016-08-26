@@ -1,0 +1,16 @@
+# ===================================
+#  Relation Behavior Config
+# ===================================
+
+paths:
+    label: Dunning Steps
+    view:
+        list: $/responsiv/subscribe/models/dunningplan/columns.yaml
+        toolbarButtons: add|remove
+    manage:
+        showSearch: true
+        recordsPerPage: 10
+        list: $/responsiv/subscribe/models//offering/columns.yaml
+    pivot:
+        form: $/responsiv/subscribe/models/dunningplan/fields.yaml
+

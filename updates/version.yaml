@@ -1,0 +1,11 @@
+1.0.1: 
+    - First version of Subscribe
+    - create_plans_table.php
+    - create_statuses_table.php
+    - create_status_logs_table.php
+    - create_transitions_table.php
+    - create_dunning_plans_table.php
+    - create_dunning_paths_table.php
+1.0.2:
+    - Seed table data
+    - seed_tables.php

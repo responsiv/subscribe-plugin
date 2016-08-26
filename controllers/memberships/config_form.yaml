@@ -1,0 +1,31 @@
+# ===================================
+#  Form Behavior Config
+# ===================================
+
+# Record name
+name: Membership
+
+# Model Form Field configuration
+form: $/responsiv/subscribe/models/membership/fields.yaml
+
+# Model Class name
+modelClass: Responsiv\Subscribe\Models\Membership
+
+# Default redirect location
+defaultRedirect: responsiv/subscribe/memberships
+
+# Create page
+create:
+    title: Create Membership
+    redirect: responsiv/subscribe/memberships/update/:id
+    redirectClose: responsiv/subscribe/memberships
+
+# Update page
+update:
+    title: Edit Membership
+    redirect: responsiv/subscribe/memberships
+    redirectClose: responsiv/subscribe/memberships
+
+# Preview page
+preview:
+    title: Preview Membership
