@@ -3,16 +3,16 @@
 # ===================================
 
 # Model List Column configuration
-list: $/responsiv/subscribe/models/dunningplan/columns.yaml
+list: $/responsiv/subscribe/models/policy/columns.yaml
 
 # Model Class name
-modelClass: Responsiv\Subscribe\Models\DunningPlan
+modelClass: Responsiv\Subscribe\Models\Policy
 
 # List Title
-title: Manage Dunning Strategies
+title: Manage Policies
 
 # Link URL for each record
-recordUrl: responsiv/subscribe/dunnings/update/:id
+recordUrl: responsiv/subscribe/policies/update/:id
 
 # Message to display if the list is empty
 noRecordsMessage: backend::lang.list.no_records

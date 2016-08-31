@@ -20,6 +20,6 @@ class Memberships extends Controller
     {
         parent::__construct();
 
-        BackendMenu::setContext('Responsiv.Subscribe', 'subscribe', 'memberships');
+        BackendMenu::setContext('Responsiv.Pay', 'pay', 'memberships');
     }
 }

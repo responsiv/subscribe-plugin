@@ -1,0 +1,31 @@
+# ===================================
+#  Form Behavior Config
+# ===================================
+
+# Record name
+name: Policy
+
+# Model Form Field configuration
+form: $/responsiv/subscribe/models/policy/fields.yaml
+
+# Model Class name
+modelClass: Responsiv\Subscribe\Models\Policy
+
+# Default redirect location
+defaultRedirect: responsiv/subscribe/policies
+
+# Create page
+create:
+    title: Create Policy
+    redirect: responsiv/subscribe/policies/update/:id
+    redirectClose: responsiv/subscribe/policies
+
+# Update page
+update:
+    title: Edit Policy
+    redirect: responsiv/subscribe/policies
+    redirectClose: responsiv/subscribe/policies
+
+# Preview page
+preview:
+    title: Preview Policy

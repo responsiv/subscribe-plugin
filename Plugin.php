@@ -54,10 +54,8 @@ class Plugin extends PluginBase
      */
     public function registerComponents()
     {
-        return []; // Remove this line to activate
-
         return [
-            'Responsiv\Subscribe\Components\MyComponent' => 'myComponent',
+            'Responsiv\Subscribe\Components\PlanList' => 'subscribePlanList',
         ];
     }
 
@@ -91,22 +89,6 @@ class Plugin extends PluginBase
                 'category'    => 'Subscriptions',
                 'order'       => 500,
             ],
-            'dunning' => [
-                'label'       => 'Retries and Dunning',
-                'description' => 'Enable and configure dunning strategies and retries.',
-                'icon'        => 'icon-bell',
-                'url'         => Backend::url('responsiv/subscribe/dunnings'),
-                'category'    => 'Subscriptions',
-                'order'       => 500,
-            ],
-            'notifications' => [
-                'label'       => 'Notification Workflows',
-                'description' => 'Create and change notification emails for memberships.',
-                'icon'        => 'icon-tag',
-                'url'         => Backend::url('responsiv/subscribe/currencies'),
-                'category'    => 'Subscriptions',
-                'order'       => 500,
-            ],
         ];
     }
 
@@ -128,6 +110,17 @@ class Plugin extends PluginBase
                 ]
             ]);
         });
+    }
+
+    public function registerMailTemplates()
+    {
+        return [
+            'responsiv.subscribe::mail.billing_report' => 'Sent to administrators when the system finishes processing the automated billing.',
+            'responsiv.subscribe::mail.invoice_report' => 'Sent to administrators when the system finishes generating membership orders.',
+            'responsiv.subscribe::mail.membership_thankyou' => 'Sent to customers on new membership subscription order.',
+            'responsiv.subscribe::mail.new_membership_internal' => 'Sent to the store team members when an membership changes its status.',
+            'responsiv.subscribe::mail.membership_status_update_internal' => 'Sent to the store team members on new membership.',
+        ];
     }
 
 }

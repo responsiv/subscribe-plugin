@@ -3,12 +3,12 @@
 use BackendMenu;
 use Backend\Classes\Controller;
 use System\Classes\SettingsManager;
-use Responsiv\Subscribe\Models\DunningPlan;
+use Responsiv\Subscribe\Models\Policy;
 
 /**
- * Dunnings Back-end Controller
+ * Policies Back-end Controller
  */
-class Dunnings extends Controller
+class Policies extends Controller
 {
     public $implement = [
         'Backend.Behaviors.FormController',
@@ -26,17 +26,16 @@ class Dunnings extends Controller
 
         parent::__construct();
 
-        BackendMenu::setContext('October.System', 'system', 'settings');
-        SettingsManager::setContext('Responsiv.Subscribe', 'dunning');
+        BackendMenu::setContext('Responsiv.Pay', 'pay', 'plans');
     }
 
     //
     // Path form
     //
 
-    protected function getDunningPlanModel()
+    protected function getPolicyModel()
     {
-        $model = new DunningPlan;
+        $model = new Policy;
 
         if (count($this->params)) {
             $planId = reset($this->params);
@@ -48,7 +47,7 @@ class Dunnings extends Controller
 
     protected function refreshPlanPathList()
     {
-        $plans = $this->getDunningPlanModel()
+        $plans = $this->getPolicyModel()
             ->paths()
             ->withDeferred($this->formGetSessionKey())
             ->get()
@@ -72,7 +71,7 @@ class Dunnings extends Controller
 
         $model = $this->formGetModel();
 
-        $plan = new DunningPlan;
+        $plan = new Policy;
 
         $plan->paths()->add($model, $this->formGetSessionKey());
 
@@ -99,7 +98,7 @@ class Dunnings extends Controller
     {
         $this->initForm($model = $this->formFindModelObject(post('record_id')));
 
-        $plan = new DunningPlan;
+        $plan = new Policy;
 
         $plan->paths()->remove($model, $this->formGetSessionKey());
 

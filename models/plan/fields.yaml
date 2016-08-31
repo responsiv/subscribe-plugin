@@ -32,10 +32,10 @@ tabs:
             type: number
             span: right
 
-        dunning_plan:
+        policy:
             tab: General
-            label: Dunning plan
-            comment: If you wish to use a dunning plan, select it here.
+            label: Policy
+            comment: Defines the rules used by this plan.
             type: relation
 
         plan_type:
@@ -81,7 +81,7 @@ tabs:
         plan_monthly_behavior:
             tab: Schedule
             label: Monthly Behavior
-            comment: Please select a monthly behavior for the subscription renewal.
+            commentAbove: Please select a monthly behavior for the subscription renewal.
             type: radio
             dependsOn: plan_type
 
@@ -91,38 +91,3 @@ tabs:
             comment: Please choose a month day the subscription will be renewed on.
             type: dropdown
             dependsOn: [plan_type, plan_monthly_behavior]
-
-        invoice_advance_days:
-            tab: Schedule
-            span: auto
-            label: Invoice in advance, days
-            comment: Number of days before renewal cycle date to send invoice notification.
-            type: number
-
-        invoice_advance_days_interval:
-            tab: Schedule
-            span: auto
-            label: Invoice in advance interval, days
-            comment: Number of days between invoice notifications. Leave blank to send only once.
-            type: number
-
-        grace_period:
-            tab: Periods
-            span: left
-            label: Grace period, days
-            comment: Enter the number of days subscription will stay active after it has expired. Leave the field empty to cancel the grace period.
-            type: number
-
-        is_grace_on_renewal:
-            tab: Periods
-            span: right
-            label: Grace period starts only on renewal invoice
-            comment: Only give the user a grace period when they have renewed one or more times.
-            type: checkbox
-
-        trial_period:
-            tab: Periods
-            span: left
-            label: Trial period, days
-            comment: Leave the field empty to cancel the trial period.
-            type: number

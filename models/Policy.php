@@ -3,19 +3,23 @@
 use Model;
 
 /**
- * DunningPlan Model
+ * Policy Model
  */
-class DunningPlan extends Model
+class Policy extends Model
 {
     use \October\Rain\Database\Traits\Validation;
 
     /**
      * @var string The database table used by the model.
      */
-    public $table = 'responsiv_subscribe_dunning_plans';
+    public $table = 'responsiv_subscribe_policies';
 
     public $rules = [
         'name' => 'required',
+        'trial_period' => 'numeric',
+        'grace_period' => 'numeric',
+        'invoice_advance_days' => 'numeric',
+        'invoice_advance_days_interval' => 'numeric',
     ];
 
     /**

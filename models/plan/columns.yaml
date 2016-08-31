@@ -5,29 +5,26 @@
 columns:
     name:
         label: Name
+        width: 15%
+        searchable: true
+
+    price:
+        label: Price
+        width: 10%
 
     plan_type_name:
-        label: Membership Schedule
-
-    invoice_advance_days:
-        label: Invoice in advance, days
-
-    invoice_advance_days_interval:
-        label: Invoice in advance interval, days
+        label: Schedule
+        sortable: false
 
     code:
         label: API Code
         invisible: true
-
-    grace_period:
-        label: Grace period, days
-
-    trial_period:
-        label: Trial period, days
+        searchable: true
 
     grace_on_renewal:
         label: Grace period starts only on renewal invoice
         invisible: true
 
-    # dunning_plan
-        # label: Dunning plan
+    policy:
+        label: Policy
+        invisible: true

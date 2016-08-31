@@ -1,0 +1,45 @@
+subject = "Membership status changed: {{ membership_id }}"
+==
+<p>
+    This message is to inform you that membership #{membership_id} has changed its status from {membership_previous_status} to {membership_status_name}.
+    Status transition comment: {membership_status_comment}
+</p>
+<p><strong>Membership details</strong></p>
+<p>
+    Membership #{membership_id}<br />
+    Original Start Date: {membership_original_start}<br />
+    Original End Date: {membership_original_end}<br />
+    Current Start Date: {membership_start}<br />
+    Current End Date: {membership_end} <br />
+    Next Assessment: {membership_accessment}<br />
+    Activate On: {membership_activated}<br />
+    Cancelled On: {membership_cancelled}<br />
+    Current Period: {membership_period}
+</p>
+<p><strong>Order details</strong></p>
+<p>
+    Order <strong>#{order_id}</strong>, created on <strong>{order_date}</strong><br />
+    Subtotal: <strong>{order_subtotal}</strong><br />
+    Shipping: <strong>{order_shipping_quote}</strong><br />
+    Tax: <strong>{order_tax}</strong><br />
+    Discount total: <strong>{cart_discount}</strong><br />
+    Total: <strong>{order_total}</strong>
+</p>
+<p>Coupon: {order_coupon}</p>
+
+<p>Customer notes:</p>
+<blockquote>{customer_notes}</blockquote>
+
+<p><strong>Order items</strong></p>
+<p>{membership_order_content}</p>
+<p><strong>Customer details</strong></p>
+
+<p>
+    Billing name: {billing_customer_name}<br />
+    Billing address: {membership_billing_address}
+</p>
+
+<p>
+    Shipping name: {shipping_customer_name}<br />
+    Shipping address: {membership_shipping_address}
+</p>

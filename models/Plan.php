@@ -1,5 +1,6 @@
 <?php namespace Responsiv\Subscribe\Models;
 
+use Str;
 use Model;
 
 /**
@@ -22,15 +23,11 @@ class Plan extends Model
     public $rules = [
         'name' => 'required',
         'price' => 'required|numeric',
+        'renewal_period' => 'numeric',
         'plan_day_interval' => 'numeric',
         'plan_month_day' => 'numeric',
         'plan_month_interval' => 'numeric',
         'plan_year_interval' => 'numeric',
-        'renewal_period' => 'numeric',
-        'grace_period' => 'numeric',
-        'trial_period' => 'numeric',
-        'invoice_advance_days' => 'numeric',
-        'invoice_advance_days_interval' => 'numeric',
     ];
 
     /**
@@ -47,7 +44,7 @@ class Plan extends Model
      * @var array Relations
      */
     public $belongsTo = [
-        'dunning_plan' => 'Responsiv\Subscribe\Models\DunningPlan'
+        'policy' => 'Responsiv\Subscribe\Models\Policy'
     ];
 
     public function filterFields($fields, $context = null)
@@ -106,6 +103,70 @@ class Plan extends Model
         }
 
         return $result;
+    }
+
+    public function getPlanTypeNameAttribute()
+    {
+        $message = '';
+
+        if ($this->policy && $this->policy->trial_period > 0) {
+            $message .= sprintf(
+                'Trial period for %s %s then ',
+                $this->policy->trial_period,
+                Str::plural('day', $this->policy->trial_period)
+            );
+        }
+
+        if ($this->plan_type == self::TYPE_DAILY) {
+            if ($this->plan_day_interval > 1) {
+                $message .= sprintf('Renew every %s days', $this->plan_day_interval);
+            }
+            else {
+                $message .= 'Renew every day';
+            }
+        }
+        elseif ($this->plan_type == self::TYPE_MONTHLY) {
+            if ($this->plan_monthly_behavior == 'monthly_signup') {
+                $message .= sprintf('Renew every %s %s based on the signup date',
+                    $this->plan_month_interval,
+                    Str::plural('month', $this->plan_month_interval)
+                );
+            }
+            elseif ($this->plan_monthly_behavior == 'monthly_prorate') {
+                $message .= sprintf('Renew on the %s of the month and pro-rate billing for used time', Str::ordinal($this->plan_month_day));
+            }
+            elseif ($this->plan_monthly_behavior == 'monthly_free') {
+                $message .= sprintf('Renew on the %s of the month and do not bill until the renewal date', Str::ordinal($this->plan_month_day));
+            }
+            elseif ($this->plan_monthly_behavior == 'monthly_none') {
+                $message .= sprintf('Renew on the %s of the month and do not start the subscription until the renewal date', Str::ordinal($this->plan_month_day));
+            }
+        }
+        elseif ($this->plan_type == self::TYPE_YEARLY) {
+            if ($this->plan_year_interval > 1) {
+                $message .= sprintf('Renew every %s years', $this->plan_year_interval);
+            }
+            else {
+                $message .= 'Renew every year';
+            }
+        }
+        elseif ($this->plan_type == self::TYPE_LIFETIME) {
+            $message .= 'Never renew (lifetime membership)';
+        }
+
+        if ($this->plan_type != self::TYPE_LIFETIME && $this->renewal_period > 0) {
+            $message .= sprintf(' for %s renewal periods', $this->renewal_period);
+        }
+
+        if ($this->policy && $this->policy->grace_period > 0) {
+            $message .= sprintf(
+                ' and Grace period for %s %s',
+                $this->policy->grace_period,
+                Str::plural('day', $this->policy->grace_period)
+            );
+        }
+
+        return $message;
     }
 
 }
