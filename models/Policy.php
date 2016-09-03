@@ -1,6 +1,7 @@
 <?php namespace Responsiv\Subscribe\Models;
 
 use Model;
+use System\Models\MailTemplate;
 
 /**
  * Policy Model
@@ -38,4 +39,30 @@ class Policy extends Model
     public $hasMany = [
         'paths' => ['Responsiv\Subscribe\Models\DunningPath', 'delete' => true],
     ];
+
+    public $belongsToMany = [
+        'groups' => [
+            'Backend\Models\UserGroup',
+            'table' => 'responsiv_subscribe_policies_groups',
+            'key' => 'policy_id',
+            'otherKey' => 'group_id',
+            'order' => 'name'
+        ]
+    ];
+
+    //
+    // Options
+    //
+
+    public function getExpireTemplateOptions()
+    {
+        return $this->getMailTemplates();
+    }
+
+    protected function getMailTemplates()
+    {
+        $codes = array_keys(MailTemplate::listAllTemplates());
+        $result = array_combine($codes, $codes);
+        return $result;
+    }
 }

@@ -40,6 +40,17 @@ tabs:
             comment: Leave the field empty to cancel the trial period.
             type: number
 
+        expire_template:
+            label: Expiration template
+            tab: Notifications
+            type: dropdown
+
+        groups:
+            label: Notify administrator groups
+            comment: Send the admin template to everyone in these group.
+            type: relation
+            tab: Notifications
+
         paths:
             label: Dunning steps
             type: partial

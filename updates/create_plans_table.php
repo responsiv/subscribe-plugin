@@ -13,6 +13,7 @@ class CreatePlansTable extends Migration
             $table->increments('id');
             $table->string('name')->nullable();
             $table->string('code')->nullable();
+            $table->text('features')->nullable();
             $table->decimal('price', 15, 2)->default(0);
             $table->decimal('setup_price', 15, 2)->nullable();
             $table->string('plan_type')->nullable();
@@ -22,10 +23,8 @@ class CreatePlansTable extends Migration
             $table->integer('plan_month_day')->nullable();
             $table->integer('plan_month_interval')->nullable();
             $table->integer('plan_year_interval')->nullable();
-
             $table->integer('policy_id')->unsigned()->nullable()->index();
-            $table->integer('expire_notification_id')->unsigned()->nullable()->index();
-
+            $table->integer('tax_class_id')->unsigned()->nullable()->index();
             $table->timestamps();
         });
     }

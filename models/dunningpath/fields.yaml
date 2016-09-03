@@ -29,9 +29,3 @@ fields:
         type: dropdown
         span: auto
         placeholder: -- Do not send a notification --
-
-    admin_group:
-        label: Notify administrator group
-        comment: Send the admin template to everyone in this group.
-        type: relation
-        emptyOption: 'All administrators'

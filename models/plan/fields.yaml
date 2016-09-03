@@ -32,6 +32,12 @@ tabs:
             type: number
             span: right
 
+        tax_class:
+            label: Tax Class
+            type: relation
+            tab: General
+            emptyOption: -- use default --
+
         policy:
             tab: General
             label: Policy

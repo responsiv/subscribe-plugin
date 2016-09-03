@@ -11,15 +11,6 @@ class SeedTables extends Seeder
     public function run()
     {
         Status::create([
-            'id' => 5,
-            'code' => 'pending',
-            'name' => 'Pending',
-            'color' => '#999999',
-            'notify_user' => 1,
-            'user_template' => 'responsiv.subscribe::mail.membership_thankyou',
-        ]);
-
-        Status::create([
             'id' => 1,
             'code' => 'active',
             'name' => 'Active',
@@ -57,6 +48,15 @@ class SeedTables extends Seeder
             'admin_template' => 'responsiv.subscribe::mail.membership_status_update_internal',
         ]);
 
+        Status::create([
+            'id' => 5,
+            'code' => 'pending',
+            'name' => 'Pending',
+            'color' => '#999999',
+            'notify_user' => 1,
+            'user_template' => 'responsiv.subscribe::mail.membership_thankyou',
+        ]);
+
         Transition::create(['from_state_id' => 1, 'to_state_id' => 2, 'role_id' => 1]);
         Transition::create(['from_state_id' => 1, 'to_state_id' => 3, 'role_id' => 1]);
         Transition::create(['from_state_id' => 5, 'to_state_id' => 3, 'role_id' => 1]);
@@ -91,6 +91,7 @@ class SeedTables extends Seeder
             'code' => 'basic-month',
             'price' => 9.95,
             'plan_type' => Plan::TYPE_MONTHLY,
+            'features' => ['First', 'Second', 'Third'],
             'plan_month_interval' => 1,
             'plan_monthly_behavior' => 'monthly_signup',
             'policy_id' => 1,
@@ -101,6 +102,7 @@ class SeedTables extends Seeder
             'code' => 'basic-year',
             'price' => 99.95,
             'plan_type' => Plan::TYPE_YEARLY,
+            'features' => ['First', 'Second', 'Third'],
             'plan_year_interval' => 1,
             'policy_id' => 3,
         ]);
@@ -110,6 +112,7 @@ class SeedTables extends Seeder
             'code' => 'pro-month',
             'price' => 19.95,
             'plan_type' => Plan::TYPE_MONTHLY,
+            'features' => ['First', 'Second', 'Third'],
             'plan_month_interval' => 1,
             'plan_monthly_behavior' => 'monthly_signup',
             'policy_id' => 2,
@@ -120,6 +123,7 @@ class SeedTables extends Seeder
             'code' => 'pro-year',
             'price' => 199.95,
             'plan_type' => Plan::TYPE_YEARLY,
+            'features' => ['First', 'Second', 'Third'],
             'plan_year_interval' => 1,
             'policy_id' => 3,
         ]);

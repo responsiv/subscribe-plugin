@@ -2,6 +2,7 @@
 
 use Str;
 use Model;
+use Responsiv\Pay\Models\Tax as TaxModel;
 
 /**
  * Plan Model
@@ -41,10 +42,16 @@ class Plan extends Model
     protected $fillable = [];
 
     /**
+     * @var array List of attribute names which are json encoded and decoded from the database.
+     */
+    protected $jsonable = ['features'];
+
+    /**
      * @var array Relations
      */
     public $belongsTo = [
-        'policy' => 'Responsiv\Subscribe\Models\Policy'
+        'policy' => 'Responsiv\Subscribe\Models\Policy',
+        'tax_class' => 'Responsiv\Pay\Models\Tax',
     ];
 
     public function filterFields($fields, $context = null)
@@ -73,6 +80,10 @@ class Plan extends Model
             $fields->plan_month_day->hidden = true;
         }
     }
+
+    //
+    // Options
+    //
 
     public function getPlanTypeOptions()
     {
@@ -105,11 +116,51 @@ class Plan extends Model
         return $result;
     }
 
+    //
+    // Utils
+    //
+
+    public function isFree()
+    {
+        return $this->price == 0;
+    }
+
+    public function hasTrial()
+    {
+        return $this->policy && $this->policy->trial_period > 0;
+    }
+
+    public function hasGracePeriod()
+    {
+        return $this->policy && $this->policy->grace_period > 0;
+    }
+
+    public function getTaxClass()
+    {
+        return $this->tax_class ?: TaxModel::getDefault();
+    }
+
+    //
+    // Attributes
+    //
+
+    public function getPriceWithTaxAttribute()
+    {
+        return $this->getTaxAmountAttribute() + $this->price;
+    }
+
+    public function getTaxAmountAttribute()
+    {
+        return ($taxClass = $this->getTaxClass())
+            ? $taxClass->getTotalTax($this->price)
+            : 0;
+    }
+
     public function getPlanTypeNameAttribute()
     {
         $message = '';
 
-        if ($this->policy && $this->policy->trial_period > 0) {
+        if ($this->hasTrial()) {
             $message .= sprintf(
                 'Trial period for %s %s then ',
                 $this->policy->trial_period,
@@ -158,7 +209,7 @@ class Plan extends Model
             $message .= sprintf(' for %s renewal periods', $this->renewal_period);
         }
 
-        if ($this->policy && $this->policy->grace_period > 0) {
+        if ($this->hasGracePeriod()) {
             $message .= sprintf(
                 ' and Grace period for %s %s',
                 $this->policy->grace_period,

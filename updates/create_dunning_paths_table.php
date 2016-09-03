@@ -14,11 +14,8 @@ class CreateDunningPathsTable extends Migration
             $table->integer('failed_attempts')->nullable();
             $table->string('user_template')->nullable();
             $table->string('admin_template')->nullable();
-
             $table->integer('policy_id')->unsigned()->nullable()->index();
             $table->integer('status_id')->unsigned()->nullable()->index();
-            $table->integer('admin_group_id')->unsigned()->nullable()->index();
-
             $table->timestamps();
         });
     }
