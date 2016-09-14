@@ -56,6 +56,7 @@ class Plugin extends PluginBase
     {
         return [
             'Responsiv\Subscribe\Components\PlanList' => 'subscribePlanList',
+            'Responsiv\Subscribe\Components\Register' => 'subscribeRegister',
         ];
     }
 

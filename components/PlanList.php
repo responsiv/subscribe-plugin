@@ -2,8 +2,6 @@
 
 use Cms\Classes\ComponentBase;
 use Responsiv\Subscribe\Models\Plan as PlanModel;
-use Responsiv\Pay\Models\Tax as TaxModel;
-use Responsiv\Pay\Classes\TaxLocation;
 
 class PlanList extends ComponentBase
 {
@@ -61,24 +59,6 @@ class PlanList extends ComponentBase
     public function lifetimePlans()
     {
         return $this->plans()->where('plan_type', PlanModel::TYPE_LIFETIME);
-    }
-
-    public function onGetPlan()
-    {
-        if (!$planId = post('id')) {
-            return;
-        }
-
-        $this->page['plan'] = PlanModel::find($planId);
-    }
-
-    public function getLocationInfo()
-    {
-        $location = new TaxLocation;
-
-        $location->countryId = post('country_id');
-
-        return $location;
     }
 
 }

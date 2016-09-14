@@ -137,7 +137,11 @@ class Plan extends Model
 
     public function getTaxClass()
     {
-        return $this->tax_class ?: TaxModel::getDefault();
+        if (!$this->tax_class) {
+            $this->setRelation('tax_class', TaxModel::getDefault());
+        }
+
+        return $this->tax_class;
     }
 
     //
