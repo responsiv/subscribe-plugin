@@ -1,6 +1,7 @@
 <?php namespace Responsiv\Subscribe\Models;
 
 use Model;
+use Event;
 use Carbon\Carbon;
 
 /**

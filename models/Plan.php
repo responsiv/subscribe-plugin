@@ -342,7 +342,7 @@ class Plan extends Model
         }
 
         $date = clone $start;
-        $result = null;
+        $result = clone $start;
 
         switch ($this->plan_type) {
             case self::TYPE_DAILY:
