@@ -1,10 +1,16 @@
 <?php namespace Responsiv\Subscribe\Components;
 
 use Auth;
+use Redirect;
 use Validator;
+use Cms\Classes\Page;
 use Cms\Classes\ComponentBase;
-use Responsiv\Subscribe\Models\Plan as PlanModel;
 use Responsiv\Pay\Models\Tax as TaxModel;
+use Responsiv\Pay\Models\Invoice as InvoiceModel;
+use Responsiv\Pay\Models\InvoiceItem as InvoiceItemModel;
+use Responsiv\Pay\Models\InvoiceStatus as InvoiceStatusModel;
+use Responsiv\Subscribe\Models\Plan as PlanModel;
+use Responsiv\Subscribe\Models\Membership as MembershipModel;
 use Responsiv\Pay\Classes\TaxLocation;
 use Responsiv\Pay\Models\PaymentMethod;
 use ValidationException;
@@ -22,7 +28,19 @@ class Register extends ComponentBase
 
     public function defineProperties()
     {
-        return [];
+        return [
+            'paymentPage' => [
+                'title'       => 'Payment page',
+                'description' => 'This page is used for providing the membership payment.',
+                'type'        => 'dropdown',
+                'default'     => 'register/pay',
+            ],
+        ];
+    }
+
+    public function getPaymentPageOptions()
+    {
+        return Page::sortBy('baseFileName')->lists('baseFileName', 'baseFileName');
     }
 
     //
@@ -31,7 +49,16 @@ class Register extends ComponentBase
 
     public function onGetPlan()
     {
-        if (!$planId = post('selected_plan')) {
+        $this->page['plan'] = $this->getPlan();
+    }
+
+    protected function getPlan($planId = null)
+    {
+        if (!$planId) {
+            $planId = post('selected_plan');
+        }
+
+        if (!$planId) {
             return;
         }
 
@@ -39,12 +66,12 @@ class Register extends ComponentBase
             $this->setLocationInfoOnPlan($plan);
         }
 
-        $this->page['plan'] = $plan;
+        return $plan;
     }
 
     protected function setLocationInfoOnPlan($plan)
     {
-        if (!$countryId = post('country_id')) {
+        if (!$countryId = post('country')) {
             return;
         }
 
@@ -65,6 +92,58 @@ class Register extends ComponentBase
 
         $user = $this->registerGuestUser();
 
+        $membership = $this->createMembership($user);
+
+        $invoice = $this->createInvoice($user, $membership);
+
+        return Redirect::to($this->pageUrl(
+            $this->property('paymentPage'),
+            ['hash' => $invoice->hash]
+        ));
+    }
+
+    protected function createMembership($user)
+    {
+        if (!$plan = $this->getPlan()) {
+            throw new ValidationException(['selected_plan' => 'Plan missing!']);
+        }
+
+        return MembershipModel::createForGuest($user, $plan);
+    }
+
+    protected function createInvoice($user, $membership)
+    {
+        if (!$membership->plan) {
+            throw new ValidationException(['selected_plan' => 'Plan missing!']);
+        }
+
+        if (!$invoice = InvoiceModel::applyRelated($membership)->first()) {
+            $invoice = new InvoiceModel;
+            $invoice->user = $user;
+            $invoice->related = $membership;
+            $invoice->first_name = $user->name;
+            $invoice->last_name = $user->surname;
+
+            $invoice->updateInvoiceStatus(InvoiceStatusModel::STATUS_APPROVED);
+        }
+
+        $invoice->email = $user->email;
+        $invoice->phone = $user->phone;
+        $invoice->company = post('company');
+        $invoice->street_addr = post('street_addr');
+        $invoice->city = post('city');
+        $invoice->zip = post('zip');
+        $invoice->country_id = post('country_id');
+        $invoice->state_id = post('state_id');
+        $invoice->due_at = $invoice->freshTimestamp();
+        $invoice->return_page = $this->property('paymentPage');
+        $invoice->save();
+
+        $membership->plan->populateInvoiceItems($invoice);
+
+        $invoice->touchTotals();
+
+        return $invoice;
     }
 
     protected function registerGuestUser()

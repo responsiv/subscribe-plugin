@@ -2,7 +2,8 @@
 
 use Str;
 use Model;
-use Responsiv\Pay\Models\Tax as TaxModel;
+use Responsiv\Pay\Models\Tax;
+use Responsiv\Pay\Models\InvoiceItem;
 
 /**
  * Plan Model
@@ -116,6 +117,32 @@ class Plan extends Model
         return $result;
     }
 
+    public function populateInvoiceItems($invoice)
+    {
+        // Only populate an empty invoice
+        if (!$invoice || $invoice->items->count()) {
+            return;
+        }
+
+        if ($this->setup_price) {
+            $item = new InvoiceItem;
+            $item->invoice = $invoice;
+            $item->quantity = 1;
+            $item->tax_class_id = $this->tax_class_id;
+            $item->price = $this->setup_price;
+            $item->description = 'Set up fee';
+            $item->save();
+        }
+
+        $item = new InvoiceItem;
+        $item->invoice = $invoice;
+        $item->quantity = 1;
+        $item->tax_class_id = $this->tax_class_id;
+        $item->price = $this->price;
+        $item->description = $this->name;
+        $item->save();
+    }
+
     //
     // Utils
     //
@@ -138,7 +165,7 @@ class Plan extends Model
     public function getTaxClass()
     {
         if (!$this->tax_class) {
-            $this->setRelation('tax_class', TaxModel::getDefault());
+            $this->setRelation('tax_class', Tax::getDefault());
         }
 
         return $this->tax_class;
@@ -148,12 +175,43 @@ class Plan extends Model
     // Attributes
     //
 
+    public function getTotalAttribute()
+    {
+        $setup = $this->setup_price ?: 0;
+
+        return $this->price + $setup;
+    }
+
+    public function getTotalWithTaxAttribute()
+    {
+        return $this->total + $this->total_tax;
+    }
+
+    public function getTotalTaxAttribute()
+    {
+        return ($taxClass = $this->getTaxClass())
+            ? $taxClass->getTotalTax($this->total)
+            : 0;
+    }
+
+    public function getSetupPriceWithTaxAttribute()
+    {
+        return $this->setup_price + $this->setup_tax;
+    }
+
+    public function getSetupTaxAttribute()
+    {
+        return ($taxClass = $this->getTaxClass())
+            ? $taxClass->getTotalTax($this->setup_price)
+            : 0;
+    }
+
     public function getPriceWithTaxAttribute()
     {
         return $this->getTaxAmountAttribute() + $this->price;
     }
 
-    public function getTaxAmountAttribute()
+    public function getPriceTaxAttribute()
     {
         return ($taxClass = $this->getTaxClass())
             ? $taxClass->getTotalTax($this->price)

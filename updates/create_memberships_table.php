@@ -26,10 +26,14 @@ class CreateMembershipsTable extends Migration
             $table->dateTime('delay_activated_at')->nullable();
             $table->dateTime('delay_cancelled_at')->nullable();
             $table->dateTime('notification_sent_at')->nullable();
+            $table->boolean('is_active')->default(false);
+            $table->boolean('is_guest')->default(false);
+
+            $table->string('related_id')->index()->nullable();
+            $table->string('related_type')->index()->nullable();
 
             $table->integer('user_id')->unsigned()->nullable()->index();
             $table->integer('plan_id')->unsigned()->nullable()->index();
-            $table->integer('related_id')->unsigned()->nullable()->index();
             $table->integer('status_id')->unsigned()->nullable()->index();
             $table->integer('invoice_id')->unsigned()->nullable()->index();
             $table->integer('invoice_item_id')->unsigned()->nullable()->index();

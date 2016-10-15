@@ -1,6 +1,7 @@
 <?php namespace Responsiv\Subscribe\Models;
 
 use Model;
+use Responsiv\Pay\Models\InvoiceItem;
 
 /**
  * Membership Model
@@ -16,7 +17,7 @@ class Membership extends Model
     /**
      * @var array Guarded fields
      */
-    protected $guarded = ['*'];
+    protected $guarded = [];
 
     /**
      * @var array Fillable fields
@@ -26,14 +27,24 @@ class Membership extends Model
     /**
      * @var array Relations
      */
-    public $hasOne = [];
-    public $hasMany = [];
-    public $belongsTo = [];
-    public $belongsToMany = [];
-    public $morphTo = [];
-    public $morphOne = [];
-    public $morphMany = [];
-    public $attachOne = [];
-    public $attachMany = [];
+    public $belongsTo = [
+        'user'           => ['RainLab\User\Models\User'],
+        'invoice'        => ['Responsiv\Pay\Models\Invoice'],
+        'invoice_item'   => ['Responsiv\Pay\Models\InvoiceItem'],
+        'plan'           => ['Responsiv\Subscribe\Models\Plan'],
+        'status'         => ['Responsiv\Subscribe\Models\Status'],
+    ];
 
+    public $morphTo = [
+        'related' => []
+    ];
+
+    public static function createForGuest($user, $plan)
+    {
+        return static::firstOrCreate([
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'is_guest' => 1
+        ]);
+    }
 }
