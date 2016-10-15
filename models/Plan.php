@@ -1,6 +1,7 @@
 <?php namespace Responsiv\Subscribe\Models;
 
 use Str;
+use Carbon\Carbon;
 use Model;
 use Responsiv\Pay\Models\Tax;
 use Responsiv\Pay\Models\InvoiceItem;
@@ -162,6 +163,15 @@ class Plan extends Model
         return $this->policy && $this->policy->grace_period > 0;
     }
 
+    public function getPolicy()
+    {
+        if (!$this->policy) {
+            $this->setRelation('policy', Policy::first());
+        }
+
+        return $this->policy;
+    }
+
     public function getTaxClass()
     {
         if (!$this->tax_class) {
@@ -280,6 +290,139 @@ class Plan extends Model
         }
 
         return $message;
+    }
+
+    //
+    // Date calculations
+    //
+
+    /*
+     * Get start date for selected plan
+     */
+    public function getPeriodStartDate($current = null)
+    {
+        if (!$current) {
+            $current = $this->freshTimestamp();
+        }
+
+        $result = clone $current;
+
+        if ($this->trial_period) {
+            $result = $result->addDays($this->trial_period);
+        }
+
+        if ($this->plan_type == self::TYPE_MONTHLY) {
+            /*
+             * Do not start the subscription until the start renewal period
+             */
+            if ($this->plan_monthly_behavior == 'monthly_none') {
+
+                $checkEndDay = $this->checkDate($this->plan_month_day, $current->month, $current->year);
+
+                if ($current->day <= $checkEndDay) {
+                    $result->day = $checkEndDay;
+                }
+                else {
+                    $result = $result->addMonth();
+                    $result->day = $this->checkDate($this->plan_month_day, $result->month, $result->year);
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /*
+     * Get end date for selected plan
+     */
+    public function getPeriodEndDate($start = null)
+    {
+        if (!$start) {
+            $start = $this->freshTimestamp();
+        }
+
+        $date = clone $start;
+        $result = null;
+
+        switch ($this->plan_type) {
+            case self::TYPE_DAILY:
+                $result = $date->addDays($this->plan_day_interval);
+                break;
+
+            case self::TYPE_MONTHLY:
+                $next = clone $date;
+                $next->addMonth();
+
+                if ($this->plan_monthly_behavior == 'monthly_signup') {
+                    $result->year = $next->year;
+                    $result->month = $next->month;
+                    $result->day = $this->checkDate($date->day, $next->month, $next->year);
+                }
+                elseif ($this->plan_monthly_behavior == 'monthly_prorate') {
+                    // Get plan end day of this month
+                    $checkEndDay = $this->checkDate($this->plan_month_day, $date->month, $date->year);
+
+                    // On the same day
+                    if ($day == $checkEndDay) {
+                        $result->year = $next->year;
+                        $result->month = $next->month;
+                        $result->day = $this->checkDate($this->plan_month_day, $next->month, $next->year);
+                    }
+                    // Is it going to renew this month
+                    elseif ($day < $checkEndDay) {
+                        $result->year = $date->year;
+                        $result->month = $date->month;
+                        $result->day = $checkEndDay;
+                    }
+                    // Passed the renewal, set for next month
+                    else {
+                        $result->year = $next->year;
+                        $result->month = $next->month;
+                        $result->day = $this->checkDate($this->plan_month_day, $next->month, $next->year);
+                    }
+                }
+                elseif ($this->plan_monthly_behavior == 'monthly_free' || $this->plan_monthly_behavior == 'monthly_none') {
+                    $result->year = $next->year;
+                    $result->month = $next->month;
+                    $result->day = $this->checkDate($this->plan_month_day, $next->month, $next->year);
+                }
+                else {
+                    throw new ApplicationException('Unknown monthly behavior: '.$this->plan_monthly_behavior);
+                }
+                break;
+
+            case self::type_yearly:
+                $result = $date->addYears($this->plan_year_interval);
+                break;
+
+            case self::type_lifetime:
+                $result = null;
+                break;
+
+            default:
+                throw new ApplicationException('Unknown membership plan: '.$this->plan_type);
+                break;
+        }
+
+        return $result;
+    }
+
+    /*
+     * Returns first valid day from date
+     */
+    protected function checkDate($day, $month, $year)
+    {
+        //all months have less than 28 days
+        if ($day <= 28) {
+            return $day;
+        }
+
+        //check if month has a valid day
+        for ($checkDay = $day; $checkDay > 28; $checkDay--) {
+            if (checkdate($month, $checkDay, $year)) {
+                return $checkDay;
+            }
+        }
     }
 
 }

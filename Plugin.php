@@ -2,6 +2,7 @@
 
 use Event;
 use Backend;
+use Responsiv\Subscribe\Models\Membership as MembershipModel;
 use System\Classes\PluginBase;
 
 /**
@@ -34,7 +35,7 @@ class Plugin extends PluginBase
      */
     public function register()
     {
-
+        Event::listen('responsiv.pay.invoicePaid', [$this, 'handleInvoicePaid']);
     }
 
     /**
@@ -122,6 +123,18 @@ class Plugin extends PluginBase
             'responsiv.subscribe::mail.new_membership_internal' => 'Sent to the store team members when an membership changes its status.',
             'responsiv.subscribe::mail.membership_status_update_internal' => 'Sent to the store team members on new membership.',
         ];
+    }
+
+    public function handleInvoicePaid($invoice)
+    {
+        if (!$invoice || !$invoice->related) {
+            return;
+        }
+
+        $related = $invoice->related;
+        if ($related instanceof MembershipModel) {
+            $related->activateMembership();
+        }
     }
 
 }
