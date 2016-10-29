@@ -7,6 +7,8 @@ use Model;
  */
 class Status extends Model
 {
+    const STATUS_TRIAL = 'trial';
+    const STATUS_GRACE = 'grace';
     const STATUS_ACTIVE = 'active';
     const STATUS_COMPLETE = 'complete';
     const STATUS_CANCELLED = 'cancelled';
@@ -42,6 +44,16 @@ class Status extends Model
     public $morphMany = [];
     public $attachOne = [];
     public $attachMany = [];
+
+    public static function getStatusGrace()
+    {
+        return static::getByCode(static::STATUS_GRACE);
+    }
+
+    public static function getStatusTrial()
+    {
+        return static::getByCode(static::STATUS_TRIAL);
+    }
 
     public static function getStatusActive()
     {

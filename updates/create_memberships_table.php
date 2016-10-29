@@ -12,6 +12,7 @@ class CreateMembershipsTable extends Migration
             $table->engine = 'InnoDB';
             $table->increments('id');
             $table->integer('renewal_period')->nullable();
+            $table->integer('billing_failed')->nullable();
             $table->date('original_period_start')->nullable();
             $table->date('original_period_end')->nullable();
             $table->date('current_period_start')->nullable();

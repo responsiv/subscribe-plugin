@@ -181,6 +181,14 @@ class Plan extends Model
         return $this->tax_class;
     }
 
+    /*
+     * Whether or not this plan can renew
+     */
+    public function isRenewable()
+    {
+        return $this->plan_type != self::TYPE_LIFETIME;
+    }
+
     //
     // Attributes
     //
