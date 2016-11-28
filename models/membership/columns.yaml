@@ -3,6 +3,18 @@
 # ===================================
 
 columns:
+
+    status:
+        label: Status
+        relation: status
+        select: name
+        sortable: false
+
+    id:
+        label: ID
+        searchable: true
+        width: 100px
+
     user_name:
         label: User
         relation: user
@@ -27,12 +39,6 @@ columns:
         select: id
         sortable: false
         invisible: true
-
-    status:
-        label: Status
-        relation: status
-        select: name
-        sortable: false
 
     original_period_start:
         label: Original Period Start

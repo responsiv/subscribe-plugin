@@ -1,6 +1,6 @@
 <div class="scoreboard-item title-value">
     <h4>Membership</h4>
-    <p># 1</p>
+    <p># <?= $formModel->id ?></p>
     <p class="description">created: now</p>
 </div>
 <div class="scoreboard-item title-value">
@@ -12,8 +12,25 @@
     <?php endif ?>
     <p class="description">since: now</p>
 </div>
-<div class="scoreboard-item title-value">
-    <h4>User</h4>
-    <p>Indiana Jones</p>
-    <p class="description">email: some@guy.com</p>
-</div>
+<?php if ($formModel->user): ?>
+    <?php
+        $userLink = Backend::url('rainlab/user/users/preview/'.$formModel->user->id);
+    ?>
+    <div class="scoreboard-item title-value">
+        <h4>User</h4>
+        <p><?= $formModel->user->name ?></p>
+        <p class="description">
+            <a href="<?= $userLink ?>">
+                <?= $formModel->user->email ?>
+            </a>
+        </p>
+    </div>
+<?php else: ?>
+    <div class="scoreboard-item title-value">
+        <h4>User</h4>
+        <p><em>Unknown user</em></p>
+        <p class="description">
+            This user may have deactivated their account.
+        </p>
+    </div>
+<?php endif ?>
