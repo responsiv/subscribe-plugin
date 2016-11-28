@@ -4,12 +4,15 @@ use Model;
 use Event;
 use Responsiv\Pay\Models\Invoice;
 use Responsiv\Pay\Models\InvoiceItem;
+use Responsiv\Pay\Models\InvoiceStatus;
+use ApplicationException;
 
 /**
  * Membership Model
  */
 class Membership extends Model
 {
+    use \October\Rain\Database\Traits\Validation;
 
     /**
      * @var string The database table used by the model.
@@ -25,6 +28,14 @@ class Membership extends Model
      * @var array Fillable fields
      */
     protected $fillable = [];
+
+    /**
+     * @var array Rules
+     */
+    public $rules = [
+        'user' => 'required',
+        'plan' => 'required',
+    ];
 
     /**
      * @var array The attributes that should be mutated to dates.
@@ -63,11 +74,66 @@ class Membership extends Model
 
     public static function createForGuest($user, $plan)
     {
-        return static::firstOrCreate([
+        $membership = static::firstOrCreate([
             'user_id' => $user->id,
             'plan_id' => $plan->id,
-            'is_guest' => 1
+            'is_throwaway' => 1
         ]);
+
+        $membership->initMembership(['guest' => true]);
+        $membership->save();
+
+        return $membership;
+    }
+
+    public function initMembership($options = [])
+    {
+        extract(array_merge([
+            'invoice' => null,
+            'guest' => false
+        ], $options));
+
+        if (!$invoice) {
+            $invoice = $this->raiseInvoice(['guest' => $guest]);
+        }
+
+        $invoice->updateInvoiceStatus(InvoiceStatus::STATUS_APPROVED);
+
+        $this->invoice = $invoice;
+        $this->invoice_item = $this->raiseInvoiceItem($invoice);
+    }
+
+    /**
+     * Check if membership is active
+     * @return bool
+     */
+    public function isActive()
+    {
+        if (!$this->status) {
+            return false;
+        }
+
+        if (
+            $this->status->code != Status::STATUS_ACTIVE &&
+            $this->status->code != Status::STATUS_TRIAL &&
+            $this->status->code != Status::STATUS_GRACE
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /*
+     * No payment - default dunning strategy
+     */
+    public function noPayment($comment = null)
+    {
+        $status = Status::getStatusPastDue();
+
+        StatusLog::createRecord($status->id, $this, $comment);
+
+        return true;
     }
 
     /**
@@ -332,6 +398,162 @@ class Membership extends Model
         }
 
         return true;
+    }
+
+    /**
+     * Gets upcoming schedule
+     */
+    public function getSchedule()
+    {
+        $schedules = [];
+
+        $graceStatus = Status::getStatusGrace();
+
+        $currentStart = $this->current_period_start;
+
+        if ($this->status->id == $graceStatus->id) {
+            $currentEnd = $this->current_period_start;
+        }
+        else {
+            $currentEnd = $this->current_period_end;
+        }
+
+        $start = $this->renewal_period ? $this->renewal_period + 1 : 1;
+
+        if ($this->plan->plan_type == Plan::TYPE_LIFETIME) {
+            return $schedules;
+        }
+
+        if ($this->plan->plan_type == Plan::TYPE_YEARLY) {
+            $visible = 5;
+        }
+        elseif ($this->plan->plan_type == Plan::TYPE_MONTHLY) {
+            $visible = 14;
+        }
+        elseif ($this->plan->plan_type == Plan::TYPE_DAILY) {
+            $visible = $this->plan->plan_day_interval <= 15 ? 24 : 18;
+        }
+
+        $adjustments = Schedule::where('membership_id', $this->id)
+            ->where('billing_period', '>=', $start)
+            ->get()
+            ->lists(null, 'billing_period')
+        ;
+
+        for ($i = $start; $i <= ($start + $visible); $i++) {
+
+            $schedule = new \stdClass;
+            $currentStart = $currentEnd;
+            $currentEnd = $this->plan->getPeriodEndDate($currentEnd);
+
+            if (!$currentEnd) {
+                break;
+            }
+
+            if ($this->delay_cancelled_at && $currentStart >= $this->delay_cancelled_at) {
+                break;
+            }
+
+            if ($this->plan->renewal_period && $i > $this->plan->renewal_period) {
+                break;
+            }
+
+            $comment = '';
+            $adjusted = false;
+            $total = $this->plan ? $this->plan->price : 0;
+
+            if (isset($adjustments[$i])) {
+                $comment = $adjustments[$i]->comment;
+                $adjusted = true;
+                $total = $adjustments[$i]->price;
+            }
+
+            $schedule->period = $i;
+            $schedule->period_start = $currentStart;
+            $schedule->period_end = $currentEnd;
+            $schedule->total = $total;
+            $schedule->comment = $comment;
+            $schedule->adjusted = $adjusted;
+
+            $schedules[] = $schedule;
+        }
+
+        return $schedules;
+    }
+
+    //
+    // Invoicing
+    //
+
+    public function raiseInvoice($options = [])
+    {
+        extract(array_merge([
+            'guest' => false
+        ], $options));
+
+        if (!$this->exists) {
+            throw new ApplicationException('Please create the membership before initialization');
+        }
+
+        if (!$this->user || !$this->plan) {
+            throw new ApplicationException('Membership is missing a user or plan!');
+        }
+
+        $invoice = Invoice::applyUnpaid()->applyUser($this->user)->applyRelated($this);
+
+        if ($guest) {
+            $invoice->applyThrowaway();
+        }
+
+        $invoice = $invoice->first() ?: Invoice::makeForUser($this->user);
+        $invoice->is_throwaway = $guest ? 1 : 0;
+        $invoice->related = $this;
+        $invoice->save();
+
+        return $invoice;
+    }
+
+    /**
+     * Populates an invoices items, returns the primary item.
+     */
+    public function raiseInvoiceItem($invoice)
+    {
+        if (!$plan = $this->plan) {
+            throw new ApplicationException('Membership is missing a plan!');
+        }
+
+        $item = InvoiceItem::applyRelated($this)
+            ->applyInvoice($invoice)
+            ->first();
+
+        if ($item) {
+            return $item;
+        }
+
+        if ($invoice->items->count() > 0) {
+            $invoice->items()->delete();
+        }
+
+        $item = new InvoiceItem;
+        $item->invoice = $invoice;
+        $item->quantity = 1;
+        $item->tax_class_id = $plan->tax_class_id;
+        $item->price = $plan->price;
+        $item->description = $plan->name;
+        $item->related = $this;
+        $item->save();
+
+        if ($plan->setup_price) {
+            $item = new InvoiceItem;
+            $item->invoice = $invoice;
+            $item->quantity = 1;
+            $item->tax_class_id = $plan->tax_class_id;
+            $item->price = $plan->setup_price;
+            $item->description = 'Set up fee';
+            $item->save();
+        }
+
+        return $item;
     }
 
 }

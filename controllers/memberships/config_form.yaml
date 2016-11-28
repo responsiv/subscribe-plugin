@@ -17,15 +17,17 @@ defaultRedirect: responsiv/subscribe/memberships
 # Create page
 create:
     title: Create Membership
-    redirect: responsiv/subscribe/memberships/update/:id
+    redirect: responsiv/subscribe/memberships/preview/:id
     redirectClose: responsiv/subscribe/memberships
+    form: $/responsiv/subscribe/models/membership/fields_create.yaml
 
 # Update page
 update:
     title: Edit Membership
     redirect: responsiv/subscribe/memberships
-    redirectClose: responsiv/subscribe/memberships
+    redirectClose: responsiv/subscribe/memberships/preview/:id
 
 # Preview page
 preview:
     title: Preview Membership
+    form: $/responsiv/subscribe/models/membership/fields_preview.yaml

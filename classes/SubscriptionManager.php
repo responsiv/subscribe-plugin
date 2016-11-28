@@ -6,7 +6,7 @@ use Responsiv\Subscribe\Models\Membership as MembershipModel;
 /**
  * Subscription engine
  */
-class SubscriptionEngine
+class SubscriptionManager
 {
     use \October\Rain\Support\Traits\Singleton;
 
@@ -30,7 +30,7 @@ class SubscriptionEngine
         $this->configureMembership($membership, $invoice);
     }
 
-    public function configureMembership($membership, $invoice, $statusId)
+    public function configureMembership($membership, $invoice)
     {
         if ($invoice->isPaid()) {
             $membership->activateMembership();

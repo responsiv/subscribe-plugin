@@ -118,32 +118,6 @@ class Plan extends Model
         return $result;
     }
 
-    public function populateInvoiceItems($invoice)
-    {
-        // Only populate an empty invoice
-        if (!$invoice || $invoice->items->count()) {
-            return;
-        }
-
-        if ($this->setup_price) {
-            $item = new InvoiceItem;
-            $item->invoice = $invoice;
-            $item->quantity = 1;
-            $item->tax_class_id = $this->tax_class_id;
-            $item->price = $this->setup_price;
-            $item->description = 'Set up fee';
-            $item->save();
-        }
-
-        $item = new InvoiceItem;
-        $item->invoice = $invoice;
-        $item->quantity = 1;
-        $item->tax_class_id = $this->tax_class_id;
-        $item->price = $this->price;
-        $item->description = $this->name;
-        $item->save();
-    }
-
     //
     // Utils
     //
@@ -181,7 +155,7 @@ class Plan extends Model
         return $this->tax_class;
     }
 
-    /*
+    /**
      * Whether or not this plan can renew
      */
     public function isRenewable()

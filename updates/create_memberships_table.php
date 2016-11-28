@@ -28,7 +28,7 @@ class CreateMembershipsTable extends Migration
             $table->dateTime('delay_cancelled_at')->nullable();
             $table->dateTime('notification_sent_at')->nullable();
             $table->boolean('is_active')->default(false);
-            $table->boolean('is_guest')->default(false);
+            $table->boolean('is_throwaway')->default(false);
 
             $table->string('related_id')->index()->nullable();
             $table->string('related_type')->index()->nullable();

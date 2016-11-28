@@ -1,0 +1,19 @@
+<div class="scoreboard-item title-value">
+    <h4>Membership</h4>
+    <p># 1</p>
+    <p class="description">created: now</p>
+</div>
+<div class="scoreboard-item title-value">
+    <h4>Status</h4>
+    <?php if ($formModel->status): ?>
+        <p><?= e($formModel->status->name) ?></p>
+    <?php else: ?>
+        <p>Unknown</p>
+    <?php endif ?>
+    <p class="description">since: now</p>
+</div>
+<div class="scoreboard-item title-value">
+    <h4>User</h4>
+    <p>Indiana Jones</p>
+    <p class="description">email: some@guy.com</p>
+</div>

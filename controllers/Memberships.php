@@ -22,4 +22,9 @@ class Memberships extends Controller
 
         BackendMenu::setContext('Responsiv.Pay', 'pay', 'memberships');
     }
+
+    public function formAfterCreate($model)
+    {
+        $model->initMembership();
+    }
 }

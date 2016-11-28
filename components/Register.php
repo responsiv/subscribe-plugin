@@ -1,5 +1,6 @@
 <?php namespace Responsiv\Subscribe\Components;
 
+use Db;
 use Auth;
 use Redirect;
 use Validator;
@@ -14,6 +15,7 @@ use Responsiv\Subscribe\Models\Membership as MembershipModel;
 use Responsiv\Pay\Classes\TaxLocation;
 use Responsiv\Pay\Models\PaymentMethod;
 use ValidationException;
+use Exception;
 
 class Register extends ComponentBase
 {
@@ -90,16 +92,26 @@ class Register extends ComponentBase
     {
         $this->validateRegisterFields();
 
-        $user = $this->registerGuestUser();
+        try {
+            Db::beginTransaction();
 
-        $membership = $this->createMembership($user);
+            $user = $this->registerGuestUser();
 
-        $invoice = $this->createInvoice($user, $membership);
+            $membership = $this->createMembership($user);
 
-        return Redirect::to($this->pageUrl(
-            $this->property('paymentPage'),
-            ['hash' => $invoice->hash]
-        ));
+            $invoice = $this->populateInvoice($membership);
+
+            Db::commit();
+
+            return Redirect::to($this->pageUrl(
+                $this->property('paymentPage'),
+                ['hash' => $invoice->hash]
+            ));
+        }
+        catch (Exception $ex) {
+            Db::rollBack();
+            throw $ex;
+        }
     }
 
     protected function createMembership($user)
@@ -108,27 +120,18 @@ class Register extends ComponentBase
             throw new ValidationException(['selected_plan' => 'Plan missing!']);
         }
 
-        return MembershipModel::createForGuest($user, $plan);
+        $membership = MembershipModel::createForGuest($user, $plan);
+
+        return $membership;
     }
 
-    protected function createInvoice($user, $membership)
+    protected function populateInvoice($membership)
     {
-        if (!$membership->plan) {
-            throw new ValidationException(['selected_plan' => 'Plan missing!']);
-        }
+        $user = $membership->user;
+        $invoice = $membership->invoice;
 
-        if (!$invoice = InvoiceModel::applyRelated($membership)->first()) {
-            $invoice = new InvoiceModel;
-            $invoice->user = $user;
-            $invoice->related = $membership;
-            $invoice->first_name = $user->name;
-            $invoice->last_name = $user->surname;
-
-            $invoice->updateInvoiceStatus(InvoiceStatusModel::STATUS_APPROVED);
-        }
-
-        $invoice->email = $user->email;
-        $invoice->phone = $user->phone;
+        $invoice->first_name = $user->name;
+        $invoice->last_name = $user->surname;
         $invoice->company = post('company');
         $invoice->street_addr = post('street_addr');
         $invoice->city = post('city');
@@ -137,10 +140,8 @@ class Register extends ComponentBase
         $invoice->state_id = post('state_id');
         $invoice->due_at = $invoice->freshTimestamp();
         $invoice->return_page = $this->property('paymentPage');
+
         $invoice->save();
-
-        $membership->plan->populateInvoiceItems($invoice);
-
         $invoice->touchTotals();
 
         return $invoice;

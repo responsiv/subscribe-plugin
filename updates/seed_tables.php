@@ -57,12 +57,35 @@ class SeedTables extends Seeder
             'user_template' => 'responsiv.subscribe::mail.membership_thankyou',
         ]);
 
+        Status::create([
+            'id' => 6,
+            'code' => 'trial',
+            'name' => 'Trial',
+            'color' => '#999999',
+            'notify_admin' => 1,
+            'admin_template' => 'responsiv.subscribe::mail.membership_status_update_internal',
+        ]);
+
+        Status::create([
+            'id' => 7,
+            'code' => 'grace',
+            'name' => 'Grace',
+            'color' => '#ff0000',
+            'notify_admin' => 1,
+            'admin_template' => 'responsiv.subscribe::mail.membership_status_update_internal',
+        ]);
+
         Transition::create(['from_state_id' => 1, 'to_state_id' => 2, 'role_id' => 1]);
         Transition::create(['from_state_id' => 1, 'to_state_id' => 3, 'role_id' => 1]);
         Transition::create(['from_state_id' => 5, 'to_state_id' => 3, 'role_id' => 1]);
         Transition::create(['from_state_id' => 4, 'to_state_id' => 3, 'role_id' => 1]);
         Transition::create(['from_state_id' => 4, 'to_state_id' => 1, 'role_id' => 1]);
         Transition::create(['from_state_id' => 3, 'to_state_id' => 1, 'role_id' => 1]);
+        Transition::create(['from_state_id' => 6, 'to_state_id' => 1, 'role_id' => 1]);
+        Transition::create(['from_state_id' => 6, 'to_state_id' => 5, 'role_id' => 1]);
+        Transition::create(['from_state_id' => 7, 'to_state_id' => 2, 'role_id' => 1]);
+        Transition::create(['from_state_id' => 7, 'to_state_id' => 3, 'role_id' => 1]);
+        Transition::create(['from_state_id' => 6, 'to_state_id' => 3, 'role_id' => 1]);
 
         Policy::create([
             'id' => 1,
