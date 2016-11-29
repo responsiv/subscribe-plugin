@@ -33,15 +33,15 @@ class SubscriptionManager
     public function configureMembership($membership, $invoice)
     {
         if ($invoice->isPaid()) {
-            $membership->activateMembership();
             $membership->renewal_period = 1;
+            $membership->activateMembership();
         }
         else {
             $membership->status = StatusModel::getStatusPending();
             $membership->next_assessment = $membership->freshTimestamp();
+            $membership->save();
         }
 
-        $membership->save();
     }
 
     protected function getMembershipFromInvoice($invoice)

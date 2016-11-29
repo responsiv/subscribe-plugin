@@ -85,7 +85,6 @@ class Membership extends Model
         ]);
 
         $membership->initMembership(['guest' => true]);
-        $membership->save();
 
         return $membership;
     }
@@ -105,6 +104,13 @@ class Membership extends Model
 
         $this->invoice = $invoice;
         $this->invoice_item = $this->raiseInvoiceItem($invoice);
+
+        if ($this->hasTrialPeriod()) {
+            $this->startTrialPeriod();
+        }
+        else {
+            $this->save();
+        }
     }
 
     /**
@@ -483,6 +489,18 @@ class Membership extends Model
         }
 
         return $schedules;
+    }
+
+    /**
+     * Returns true if membership uses a trial period.
+     */
+    public function hasTrialPeriod()
+    {
+        $plan = $this->plan;
+
+        $policy = $plan->getPolicy();
+
+        return !!$policy->trial_period;
     }
 
     //
