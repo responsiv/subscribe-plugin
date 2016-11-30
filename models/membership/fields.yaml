@@ -1,7 +1,0 @@
-# ===================================
-#  Form Field Definitions
-# ===================================
-
-fields:
-    user_name:
-        label: User
