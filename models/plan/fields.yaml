@@ -1,0 +1,129 @@
+# ===================================
+#  Form Field Definitions
+# ===================================
+
+fields:
+    name:
+        tab: Plan
+        span: auto
+        label: Name
+
+    code:
+        tab: Plan
+        span: auto
+        label: API Code
+        comment: You can use the API Code for accessing the plan via the API.
+
+tabs:
+    fields:
+
+        price:
+            tab: Product
+            label: Price
+            comment: Enter the price for each renewal of this subscription.
+            type: currency
+            span: left
+
+        setup_price:
+            tab: Product
+            label: Setup price
+            comment: A one time fee added when activating or switching to this plan.
+            type: currency
+            span: right
+
+        plan_type:
+            tab: Product
+            label: Membership schedule
+            comment: Please choose a frequency the subscription will be renewed.
+            type: dropdown
+            default: monthly
+            span: left
+
+        plan_day_interval:
+            tab: Product
+            label: Renewal interval (days)
+            comment: Number of days the subscription should run before next renewal.
+            dependsOn: plan_type
+            type: number
+            span: right
+
+        plan_month_interval:
+            tab: Product
+            label: Renewal interval (months)
+            comment: Number of months the subscription should run before next renewal.
+            dependsOn: plan_type
+            type: number
+            span: right
+
+        renewal_period:
+            tab: Product
+            label: Renewal period
+            comment: Number of renewal periods before the subscription ends. Leave the field empty for unlimited renewals.
+            dependsOn: plan_type
+            type: number
+            span: right
+
+        plan_year_interval:
+            tab: Product
+            label: Renewal interval (years)
+            comment: Number of years the subscription should run before next renewal.
+            dependsOn: plan_type
+            type: number
+            span: right
+
+        plan_monthly_behavior:
+            tab: Product
+            label: Monthly behavior
+            commentAbove: Please select a monthly behavior for the subscription renewal.
+            type: radio
+            dependsOn: plan_type
+
+        plan_month_day:
+            tab: Product
+            label: Day of month
+            comment: Please choose a month day the subscription will be renewed on.
+            type: dropdown
+            dependsOn: [plan_type, plan_monthly_behavior]
+
+        tax_class:
+            tab: Product
+            label: Tax Class
+            type: relation
+            emptyOption: -- use default --
+
+        is_custom_membership:
+            tab: Product
+            label: Custom membership rules
+            comment: Override settings for new members when selecting this plan.
+            type: checkbox
+
+        membership_price:
+            tab: Product
+            span: auto
+            label: Membership price
+            type: currency
+            comment: A one time fee added when establishing a membership, with this plan selected.
+            trigger:
+                action: hide
+                field: is_custom_membership
+                condition: unchecked
+
+        trial_days:
+            tab: Product
+            span: auto
+            label: Trial period (days)
+            comment: Specify the number of free days given to a new membership.
+            trigger:
+                action: hide
+                field: is_custom_membership
+                condition: unchecked
+
+        grace_days:
+            tab: Product
+            span: auto
+            label: Grace period (days)
+            comment: Specify the number of days where a plan can be unpaid but still active.
+            trigger:
+                action: hide
+                field: is_custom_membership
+                condition: unchecked

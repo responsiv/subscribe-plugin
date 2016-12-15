@@ -1,0 +1,19 @@
+# ===================================
+#  Field Definitions
+# ===================================
+
+tabs:
+    fields:
+
+        membership_price:
+            label: Membership price
+            type: currency
+            comment: Specify a membership establishment fee for all plans.
+
+        trial_days:
+            label: Trial period (days)
+            comment: Specify the number of free days given to a new membership.
+
+        grace_days:
+            label: Grace period (days)
+            comment: Specify the number of days where a plan can be unpaid but still active.
