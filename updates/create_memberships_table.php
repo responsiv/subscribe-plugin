@@ -13,6 +13,7 @@ class CreateMembershipsTable extends Migration
             $table->increments('id');
             $table->date('trial_period_start')->nullable();
             $table->date('trial_period_end')->nullable();
+            $table->boolean('is_trial_used')->default(false);
             $table->boolean('is_throwaway')->default(false);
             $table->integer('user_id')->unsigned()->nullable()->index();
             $table->softDeletes();

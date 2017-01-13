@@ -11,6 +11,15 @@ class CreateServicesTable extends Migration
         Schema::create('responsiv_subscribe_services', function(Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->increments('id');
+
+            // Copied from Plan
+            $table->string('name')->nullable();
+            $table->decimal('price', 15, 2)->default(0);
+            $table->decimal('setup_price', 15, 2)->nullable();
+            $table->decimal('membership_price', 15, 2)->nullable();
+            $table->integer('trial_days')->nullable();
+            $table->integer('grace_days')->nullable();
+
             $table->integer('count_renewal')->nullable();
             $table->integer('count_fail')->nullable();
             $table->date('current_period_start')->nullable();
@@ -33,10 +42,11 @@ class CreateServicesTable extends Migration
             $table->dateTime('delay_activated_at')->nullable();
             $table->dateTime('delay_cancelled_at')->nullable();
 
-            $table->integer('invoice_id')->unsigned()->nullable()->index();
-            $table->integer('invoice_item_id')->unsigned()->nullable()->index();
             $table->integer('plan_id')->unsigned()->nullable()->index();
             $table->integer('status_id')->unsigned()->nullable()->index();
+            $table->integer('membership_id')->unsigned()->nullable()->index();
+            $table->integer('invoice_id')->unsigned()->nullable()->index();
+            $table->integer('invoice_item_id')->unsigned()->nullable()->index();
 
             $table->timestamps();
         });

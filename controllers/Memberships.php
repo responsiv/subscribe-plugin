@@ -1,7 +1,14 @@
 <?php namespace Responsiv\Subscribe\Controllers;
 
+use Db;
+use Flash;
+use Backend;
 use BackendMenu;
 use Backend\Classes\Controller;
+use ValidationException;
+use RainLab\User\Models\User as UserModel;
+use Responsiv\Subscribe\Models\Plan as PlanModel;
+use Responsiv\Subscribe\Models\Membership as MembershipModel;
 
 /**
  * Memberships Back-end Controller
@@ -25,8 +32,34 @@ class Memberships extends Controller
         BackendMenu::setContext('Responsiv.Pay', 'pay', 'memberships');
     }
 
-    public function formAfterCreate($model)
+    public function onCreateMembership()
     {
-        $model->initMembership();
+        $data = post('Membership');
+
+        if (
+            (!$userId = array_get($data, 'user')) ||
+            (!$user = UserModel::find($userId))
+        ) {
+            throw new ValidationException(['user' => 'Please select a user for the membership.']);
+        }
+
+        if (
+            (!$planId = array_get($data, 'selected_plan')) ||
+            (!$plan = PlanModel::find($planId))
+        ) {
+            throw new ValidationException(['selected_plan' => 'Please select a membership plan.']);
+        }
+
+        if (MembershipModel::applyUser($user)->first()) {
+            throw new ValidationException(['user' => 'User already has a membership!']);
+        }
+
+        $membership = Db::transaction(function() use ($user, $plan) {
+            return MembershipModel::createForUser($user, $plan);
+        });
+
+        Flash::success('Membership created!');
+
+        return Backend::redirect('responsiv/subscribe/memberships/preview/'.$membership->id);
     }
 }

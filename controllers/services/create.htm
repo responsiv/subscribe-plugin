@@ -1,6 +1,6 @@
 <?php Block::put('breadcrumb') ?>
     <ul>
-        <li><a href="<?= Backend::url('responsiv/subscribe/memberships') ?>">Memberships</a></li>
+        <li><a href="<?= Backend::url('responsiv/subscribe/services') ?>">Services</a></li>
         <li><?= e($this->pageTitle) ?></li>
     </ul>
 <?php Block::endPut() ?>
@@ -8,15 +8,6 @@
 <?php if (!$this->fatalError): ?>
 
     <?= Form::open(['class' => 'layout']) ?>
-
-        <div class="callout fade in callout-info">
-            <div class="content">
-                <p>
-                    Use this form to create a new membership for a user.
-                    This process cannot be used to modify existing memberships.
-                </p>
-            </div>
-        </div>
 
         <div class="layout-row">
             <?= $this->formRender() ?>
@@ -26,14 +17,23 @@
             <div class="loading-indicator-container">
                 <button
                     type="submit"
-                    data-request="onCreateMembership"
+                    data-request="onSave"
                     data-hotkey="ctrl+s, cmd+s"
-                    data-load-indicator="Creating Membership..."
+                    data-load-indicator="Creating Service..."
                     class="btn btn-primary">
                     Create
                 </button>
+                <button
+                    type="button"
+                    data-request="onSave"
+                    data-request-data="close:1"
+                    data-hotkey="ctrl+enter, cmd+enter"
+                    data-load-indicator="Creating Service..."
+                    class="btn btn-default">
+                    Create and Close
+                </button>
                 <span class="btn-text">
-                    or <a href="<?= Backend::url('responsiv/subscribe/memberships') ?>">Cancel</a>
+                    or <a href="<?= Backend::url('responsiv/subscribe/services') ?>">Cancel</a>
                 </span>
             </div>
         </div>
@@ -43,6 +43,6 @@
 <?php else: ?>
 
     <p class="flash-message static error"><?= e($this->fatalError) ?></p>
-    <p><a href="<?= Backend::url('responsiv/subscribe/memberships') ?>" class="btn btn-default">Return to memberships list</a></p>
+    <p><a href="<?= Backend::url('responsiv/subscribe/services') ?>" class="btn btn-default">Return to services list</a></p>
 
 <?php endif ?>

@@ -32,18 +32,9 @@ class Status extends Model
      */
     protected $fillable = [];
 
-    /**
-     * @var array Relations
-     */
-    public $hasOne = [];
-    public $hasMany = [];
-    public $belongsTo = [];
-    public $belongsToMany = [];
-    public $morphTo = [];
-    public $morphOne = [];
-    public $morphMany = [];
-    public $attachOne = [];
-    public $attachMany = [];
+    //
+    // Status helpers
+    //
 
     public static function getStatusGrace()
     {

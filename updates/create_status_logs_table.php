@@ -12,10 +12,9 @@ class CreateStatusLogsTable extends Migration
             $table->engine = 'InnoDB';
             $table->increments('id');
             $table->text('comment')->nullable();
-
             $table->integer('status_id')->unsigned()->nullable()->index();
+            $table->integer('service_id')->unsigned()->nullable()->index();
             $table->integer('membership_id')->unsigned()->nullable()->index();
-
             $table->timestamps();
         });
     }

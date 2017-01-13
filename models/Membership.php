@@ -2,6 +2,7 @@
 
 use Model;
 use Event;
+use RainLab\User\Models\User;
 use Responsiv\Pay\Models\Invoice;
 use Responsiv\Pay\Models\InvoiceItem;
 use Responsiv\Pay\Models\InvoiceStatus;
@@ -48,11 +49,164 @@ class Membership extends Model
      * @var array Relations
      */
     public $belongsTo = [
-        'user' => 'RainLab\User\Models\User',
+        'user' => User::class,
     ];
 
     public $hasMany = [
-        'services' => 'Responsiv\Subscribe\Models\Service',
+        'services' => [Service::class, 'delete' => true],
     ];
 
+    public $morphMany = [
+        'invoices' => [Invoice::class, 'name' => 'related'],
+        'invoice_items' => [InvoiceItem::class, 'name' => 'related'],
+    ];
+
+    //
+    // Creation
+    //
+
+    public static function createForUser(User $user, Plan $plan, $isGuest = false)
+    {
+        $membership = static::firstOrCreate([
+            'user_id' => $user->id,
+            'is_throwaway' => $isGuest ? 1 : 0
+        ]);
+
+        $membership->setRelation('user', $user);
+
+        $membership->initMembership([
+            'guest' => $isGuest,
+            'plan' => $plan
+        ]);
+
+        return $membership;
+    }
+
+    public function initMembership($options = [])
+    {
+        extract(array_merge([
+            'plan' => null,
+            'invoice' => null,
+            'guest' => false
+        ], $options));
+
+        if (!$plan) {
+            throw new ApplicationException('Membership is missing a plan!');
+        }
+
+        if (!$invoice) {
+            $invoice = $this->raiseInvoice();
+        }
+
+        if ($plan->hasMembershipPrice()) {
+            $this->raiseInvoiceMembershipFee($invoice, $plan->getMembershipPrice());
+        }
+
+        $service = Service::createForMembership($this, $plan, $invoice);
+
+        $invoice->updateInvoiceStatus(InvoiceStatus::STATUS_APPROVED);
+        $invoice->touchTotals();
+
+        if ($plan->hasTrialPeriod()) {
+            $this->setTrialPeriodFromPlan($plan);
+        }
+
+        $this->save();
+    }
+
+    //
+    // Trial period
+    //
+
+    public function setTrialPeriodFromPlan(Plan $plan)
+    {
+        $current = $this->freshTimestamp();
+        $trialDays = $plan->getTrialPeriod();
+
+        $this->is_trial_used = true;
+        $this->trial_period_start = $current;
+        $this->trial_period_end = $current->addDays($trialDays);
+    }
+
+    public function isTrialActive()
+    {
+        if (!$this->is_trial_used) {
+            return false;
+        }
+
+        return $this->trial_period_end->isFuture();
+    }
+
+    //
+    // Invoicing
+    //
+
+    public function raiseInvoice()
+    {
+        if (!$this->exists) {
+            throw new ApplicationException('Please create the membership before initialization');
+        }
+
+        if (!$user = $this->user) {
+            throw new ApplicationException('Membership is missing a user!');
+        }
+
+        $invoice = Invoice::applyUnpaid()->applyUser($user)->applyRelated($this);
+
+        if ($this->is_throwaway) {
+            $invoice->applyThrowaway();
+        }
+
+        $invoice = $invoice->first() ?: Invoice::makeForUser($user);
+        $invoice->is_throwaway = $this->is_throwaway;
+        $invoice->related = $this;
+        $invoice->save();
+
+        return $invoice;
+    }
+
+    public function raiseInvoiceMembershipFee(Invoice $invoice, $price)
+    {
+        $item = InvoiceItem::applyRelated($this)
+            ->applyInvoice($invoice)
+            ->first()
+        ;
+
+        if (!$item) {
+            $item = new InvoiceItem;
+            $item->invoice = $invoice;
+            $item->related = $this;
+            $item->quantity = 1;
+            $item->price = $price;
+            $item->description = 'Membership fee';
+            $item->save();
+        }
+
+        return $item;
+    }
+
+    //
+    // Options
+    //
+
+    public function getSelectedPlanOptions()
+    {
+        $options = [];
+
+        $plans = Plan::all();
+        foreach ($plans as $plan) {
+            $options[$plan->id] = [$plan->name, $plan->plan_type_name];
+        }
+
+        return $options;
+    }
+
+    //
+    // Scopes
+    //
+
+    public function scopeApplyUser($query, User $user)
+    {
+        return $query->where('user_id', $user->id);
+    }
 }

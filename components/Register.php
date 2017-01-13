@@ -81,7 +81,9 @@ class Register extends ComponentBase
 
         $location->countryId = $countryId;
 
-        $plan->getTaxClass()->setLocationInfo($location);
+        if ($taxClass = $plan->getTaxClass()) {
+            $taxClass->setLocationInfo($location);
+        }
     }
 
     //

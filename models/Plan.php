@@ -64,7 +64,7 @@ class Plan extends Model
             $fields->plan_monthly_behavior->hidden = true;
             $fields->plan_month_day->hidden = true;
         }
-        
+
         if ($planType != self::TYPE_DAILY) {
             $fields->plan_day_interval->hidden = true;
         }
@@ -126,21 +126,47 @@ class Plan extends Model
         return $this->price == 0;
     }
 
-    public function hasTrial()
+    public function hasTrialPeriod()
     {
-        return $this->is_trial;
+        return $this->getTrialPeriod() > 0;
+    }
+
+    public function getTrialPeriod()
+    {
+        // @todo Pull from settings or custom membership
+        return $this->trial_days;
     }
 
     public function hasGracePeriod()
     {
-        // @todo Pull from settings or custom membership
-        return true;
+        return $this->getGracePeriod() > 0;
     }
 
     public function getGracePeriod()
     {
         // @todo Pull from settings or custom membership
-        return 0;
+        return $this->grace_days;
+    }
+
+    public function hasSetupPrice()
+    {
+        return $this->getSetupPrice() > 0;
+    }
+
+    public function getSetupPrice()
+    {
+        return $this->setup_price;
+    }
+
+    public function hasMembershipPrice()
+    {
+        return $this->getMembershipPrice() > 0;
+    }
+
+    public function getMembershipPrice()
+    {
+        // @todo Pull from settings or custom membership
+        return $this->membership_price;
     }
 
     public function getTaxClass()
@@ -211,7 +237,7 @@ class Plan extends Model
     {
         $message = '';
 
-        if ($this->hasTrial()) {
+        if ($this->hasTrialPeriod()) {
             $message .= sprintf(
                 'Trial period for %s %s then ',
                 $this->trial_days,
@@ -286,7 +312,7 @@ class Plan extends Model
 
         $result = clone $current;
 
-        if ($this->hasTrial()) {
+        if ($this->hasTrialPeriod()) {
             $result = $result->addDays($this->trial_days);
         }
 

@@ -1,0 +1,15 @@
+<div data-control="toolbar">
+    <a
+        href="<?= Backend::url('responsiv/subscribe/memberships/preview/'.$formModel->membership_id) ?>"
+        class="btn btn-default oc-icon-chevron-left">
+        Return to membership #<?= e($formModel->membership_id) ?>
+    </a>
+    <a
+        href="javascript:;"
+        data-request="onCancel"
+        data-load-indicator="Cancelling..."
+        data-request-confirm="Do you really want to cancel this membership?"
+        class="btn btn-danger oc-icon-times">
+        Cancel service
+    </a>
+</div>

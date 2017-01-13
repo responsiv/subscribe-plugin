@@ -5,19 +5,14 @@
 fields:
 
     user:
-        label: User
+        label: Linked to User
         type: recordfinder
         list: $/rainlab/user/models/user/columns.yaml
         prompt: Click the %s button to find a user
         nameFrom: name
         descriptionFrom: email
-        span: auto
 
-    plan:
-        label: Plan
-        type: recordfinder
-        list: $/responsiv/subscribe/models/plan/columns.yaml
-        prompt: Click the %s button to find a plan
-        nameFrom: name
-        descriptionFrom: price
-        span: auto
+    selected_plan:
+        label: Selected plan
+        type: radio
+        required: true

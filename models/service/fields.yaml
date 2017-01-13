@@ -6,3 +6,32 @@ fields:
     id:
         label: ID
         disabled: true
+
+    section_membership:
+        label: Membership details
+        type: section
+
+    activated:
+        label: Activated
+        span: auto
+
+    period_start:
+        label: Period start
+        span: auto
+
+    period_end:
+        label: Period end
+        span: auto
+
+    next_ass:
+        label: Next assessment
+        span: auto
+
+    billing_periods:
+        label: Billing periods
+        span: auto
+
+    status:
+        label: Status
+        type: relation
+        span: auto
