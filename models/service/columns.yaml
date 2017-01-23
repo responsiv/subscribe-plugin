@@ -47,7 +47,7 @@ columns:
         type: date
         invisible: true
 
-    next_assessment:
+    next_assessment_at:
         label: Assessment
         type: date
         invisible: true

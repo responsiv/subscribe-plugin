@@ -71,7 +71,7 @@ class StatusLog extends Model
          */
         $service->newQuery()->where('id', $service->id)->update([
             'status_id' => $statusId,
-            'status_updated_at' => $this->freshTimestamp()
+            'status_updated_at' => $service->freshTimestamp()
         ]);
 
         // @todo Send email notifications

@@ -1,6 +1,7 @@
 <?php namespace Responsiv\Subscribe\Models;
 
 use Model;
+use Event;
 use Responsiv\Pay\Models\Invoice;
 use Responsiv\Pay\Models\InvoiceItem;
 use ApplicationException;
@@ -57,11 +58,11 @@ class Service extends Model
      * @var array Relations
      */
     public $belongsTo = [
-        'invoice'        => Invoice::class,
-        'invoice_item'   => InvoiceItem::class,
-        'membership'     => Membership::class,
-        'plan'           => Plan::class,
-        'status'         => Status::class,
+        'invoice'       => Invoice::class,
+        'invoice_item'  => InvoiceItem::class,
+        'membership'    => Membership::class,
+        'plan'          => Plan::class,
+        'status'        => Status::class,
     ];
 
     public $morphMany = [
@@ -140,8 +141,48 @@ class Service extends Model
             $this->startTrialPeriod();
         }
         else {
+            $this->status = Status::getStatusNew();
+            $this->next_assessment_at = $this->freshTimestamp();
             $this->save();
         }
+    }
+
+    public function activateService($comment = null)
+    {
+        $plan = $this->plan;
+        $now = $this->freshTimestamp();
+        $activateAt = $this->delay_activated_at ?: $now;
+
+        $currentBillingDate = $plan->getPeriodStartDate($activateAt);
+        $nextBillingDate = $plan->getPeriodEndDate($currentBillingDate);
+
+        /*
+         * Check if this is a not future activation date
+         */
+        if ($currentBillingDate <= $now) {
+            $this->original_period_start = $currentBillingDate;
+            $this->original_period_end = $nextBillingDate;
+            $this->current_period_start = $currentBillingDate;
+            $this->current_period_end = $nextBillingDate;
+            $this->activated_at = $now;
+            $this->next_assessment_at = $nextBillingDate;
+            $this->delay_activated_at = null;
+
+            $status = Status::getStatusActive();
+            StatusLog::createRecord($status->id, $this, $comment);
+
+            Event::fire('responsiv.subscribe.serviceActivated', $this);
+        }
+        else {
+            $this->delay_activated_at = $currentBillingDate;
+
+            $status = Status::getStatusPending();
+            StatusLog::createRecord($status->id, $this, $comment);
+
+            Event::fire('responsiv.subscribe.serviceActivatedLater', $this);
+        }
+
+        $this->save();
     }
 
     /**
@@ -163,6 +204,36 @@ class Service extends Model
         }
 
         return true;
+    }
+
+    //
+    // Trial period
+    //
+
+    /**
+     * Trial membership
+     */
+    public function startTrialPeriod($comment = null)
+    {
+        if (!$membership = $this->membership) {
+            throw new ApplicationException('Service is missing a membership!');
+        }
+
+        /*
+         * Status log
+         */
+        $status = Status::getStatusTrial();
+        StatusLog::createRecord($status->id, $this, $comment);
+
+        /*
+         * Current start and end times
+         */
+        $this->current_period_start = $membership->trial_period_start;
+        $this->current_period_end = $membership->trial_period_end;
+        $this->next_assessment_at = $membership->trial_period_end;
+        $this->save();
+
+        Event::fire('responsiv.subscribe.membershipTrialStarted', $this);
     }
 
     //
@@ -212,31 +283,122 @@ class Service extends Model
     }
 
     /**
-     * Trial membership
+     * Receive a payment
      */
-    public function startTrialPeriod($comment = null)
+    public function receivePayment($invoice, $item, $comment = null)
     {
-        if (!$membership = $this->membership) {
-            throw new ApplicationException('Service is missing a membership!');
+        $statusCode = $this->status ? $this->status->code : null;
+
+        if ($statusCode == Status::STATUS_NEW) {
+            $this->count_renewal = 1;
+            $this->activateService();
+        }
+        elseif (
+            $statusCode == Status::STATUS_PASTDUE &&
+            $this->count_fail &&
+            $this->count_fail > 0
+        ) {
+            /*
+             * Make service active
+             */
+            $status = Status::getStatusActive();
+            $this->setRelation('status', $status);
+            StatusLog::createRecord($status->id, $this, $comment);
+
+            /*
+             * Change next assessment to period end date if available
+             */
+            $this->next_assessment_at = $this->current_period_end
+                ? $this->current_period_end
+                : null;
+
+            $this->save();
+        }
+    }
+
+    //
+    // Schedule
+    //
+
+    /**
+     * Gets upcoming schedule
+     */
+    public function getSchedule()
+    {
+        $schedules = [];
+
+        $graceStatus = Status::getStatusGrace();
+
+        $currentStart = $this->current_period_start;
+
+        if ($this->status->id == $graceStatus->id) {
+            $currentEnd = $this->current_period_start;
+        }
+        else {
+            $currentEnd = $this->current_period_end;
         }
 
-        /*
-         * Status log
-         */
-        $status = Status::getStatusTrial();
-        StatusLog::createRecord($status->id, $this, $comment);
+        $start = $this->renewal_period ? $this->renewal_period + 1 : 1;
 
-        /*
-         * Current start and end times
-         */
-        $this->current_period_start = $membership->trial_period_start;
-        $this->current_period_end = $membership->trial_period_end;
-        $this->next_assessment = $membership->trial_period_end;
-        $this->save();
+        if ($this->plan->plan_type == Plan::TYPE_LIFETIME) {
+            return $schedules;
+        }
 
-        Event::fire('responsiv.subscribe.membershipTrialStarted', $this);
+        if ($this->plan->plan_type == Plan::TYPE_YEARLY) {
+            $visible = 5;
+        }
+        elseif ($this->plan->plan_type == Plan::TYPE_MONTHLY) {
+            $visible = 14;
+        }
+        elseif ($this->plan->plan_type == Plan::TYPE_DAILY) {
+            $visible = $this->plan->plan_day_interval <= 15 ? 24 : 18;
+        }
 
-        return true;
+        $adjustments = Schedule::where('membership_id', $this->id)
+            ->where('billing_period', '>=', $start)
+            ->get()
+            ->lists(null, 'billing_period')
+        ;
+
+        for ($i = $start; $i <= ($start + $visible); $i++) {
+
+            $schedule = new \stdClass;
+            $currentStart = $currentEnd;
+            $currentEnd = $this->plan->getPeriodEndDate($currentEnd);
+
+            if (!$currentEnd) {
+                break;
+            }
+
+            if ($this->delay_cancelled_at && $currentStart >= $this->delay_cancelled_at) {
+                break;
+            }
+
+            if ($this->plan->renewal_period && $i > $this->plan->renewal_period) {
+                break;
+            }
+
+            $comment = '';
+            $adjusted = false;
+            $total = $this->plan ? $this->plan->price : 0;
+
+            if (isset($adjustments[$i])) {
+                $comment = $adjustments[$i]->comment;
+                $adjusted = true;
+                $total = $adjustments[$i]->price;
+            }
+
+            $schedule->period = $i;
+            $schedule->period_start = $currentStart;
+            $schedule->period_end = $currentEnd;
+            $schedule->total = $total;
+            $schedule->comment = $comment;
+            $schedule->adjusted = $adjusted;
+
+            $schedules[] = $schedule;
+        }
+
+        return $schedules;
     }
 
     //

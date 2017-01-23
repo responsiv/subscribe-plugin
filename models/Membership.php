@@ -102,14 +102,14 @@ class Membership extends Model
             $this->raiseInvoiceMembershipFee($invoice, $plan->getMembershipPrice());
         }
 
+        if ($plan->hasTrialPeriod()) {
+            $this->setTrialPeriodFromPlan($plan);
+        }
+
         $service = Service::createForMembership($this, $plan, $invoice);
 
         $invoice->updateInvoiceStatus(InvoiceStatus::STATUS_APPROVED);
         $invoice->touchTotals();
-
-        if ($plan->hasTrialPeriod()) {
-            $this->setTrialPeriodFromPlan($plan);
-        }
 
         $this->save();
     }
@@ -183,6 +183,24 @@ class Membership extends Model
         }
 
         return $item;
+    }
+
+    /**
+     * Receive a payment
+     */
+    public function receivePayment($invoice)
+    {
+        if (!$invoice || !$invoice->items) {
+            return;
+        }
+
+        foreach ($invoice->items as $item) {
+            if ($item->related && $item->related instanceof Service) {
+                $service = $item->related;
+                $service->setRelation('membership', $this);
+                $service->receivePayment($invoice, $item);
+            }
+        }
     }
 
     //

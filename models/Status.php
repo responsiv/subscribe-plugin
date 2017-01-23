@@ -8,6 +8,7 @@ use Model;
 class Status extends Model
 {
     const STATUS_TRIAL = 'trial';
+    const STATUS_NEW = 'new';
     const STATUS_GRACE = 'grace';
     const STATUS_ACTIVE = 'active';
     const STATUS_COMPLETE = 'complete';
@@ -35,6 +36,11 @@ class Status extends Model
     //
     // Status helpers
     //
+
+    public static function getStatusNew()
+    {
+        return static::getByCode(static::STATUS_NEW);
+    }
 
     public static function getStatusGrace()
     {

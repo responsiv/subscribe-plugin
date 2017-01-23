@@ -11,6 +11,7 @@ use Responsiv\Pay\Models\InvoiceItem;
  */
 class Plan extends Model
 {
+    use \October\Rain\Database\Traits\Nullable;
     use \October\Rain\Database\Traits\Validation;
 
     const TYPE_DAILY = 'daily';
@@ -26,6 +27,8 @@ class Plan extends Model
     public $rules = [
         'name' => 'required',
         'price' => 'required|numeric',
+        'setup_price' => 'numeric',
+        'membership_fee' => 'numeric',
         'renewal_period' => 'numeric',
         'plan_day_interval' => 'numeric',
         'plan_month_day' => 'numeric',
@@ -47,6 +50,11 @@ class Plan extends Model
      * @var array List of attribute names which are json encoded and decoded from the database.
      */
     protected $jsonable = ['features'];
+
+    /**
+     * @var array List of attribute names which should be set to null when empty.
+     */
+    protected $nullable = ['grace_days', 'trial_days'];
 
     /**
      * @var array Relations
@@ -133,8 +141,11 @@ class Plan extends Model
 
     public function getTrialPeriod()
     {
-        // @todo Pull from settings or custom membership
-        return $this->trial_days;
+        if ($this->is_custom_membership) {
+            return $this->trial_days;
+        }
+
+        return Setting::get('trial_days');
     }
 
     public function hasGracePeriod()
@@ -144,8 +155,11 @@ class Plan extends Model
 
     public function getGracePeriod()
     {
-        // @todo Pull from settings or custom membership
-        return $this->grace_days;
+        if ($this->is_custom_membership) {
+            return $this->grace_days;
+        }
+
+        return Setting::get('grace_days');
     }
 
     public function hasSetupPrice()
@@ -165,8 +179,11 @@ class Plan extends Model
 
     public function getMembershipPrice()
     {
-        // @todo Pull from settings or custom membership
-        return $this->membership_price;
+        if ($this->is_custom_membership) {
+            return $this->membership_price;
+        }
+
+        return Setting::get('membership_price');
     }
 
     public function getTaxClass()
@@ -311,10 +328,6 @@ class Plan extends Model
         }
 
         $result = clone $current;
-
-        if ($this->hasTrialPeriod()) {
-            $result = $result->addDays($this->trial_days);
-        }
 
         if ($this->plan_type == self::TYPE_MONTHLY) {
             /*

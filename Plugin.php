@@ -37,8 +37,7 @@ class Plugin extends PluginBase
     {
         $manager = SubscriptionManager::instance();
 
-        // Event::listen('responsiv.pay.invoicePaid', [$manager, 'invoiceAfterPayment']);
-        // Event::listen('responsiv.pay.invoiceNew', [$manager, 'invoiceAfterCreated']);
+        Event::listen('responsiv.pay.invoicePaid', [$manager, 'invoiceAfterPayment']);
 
         /*
          * Console commands

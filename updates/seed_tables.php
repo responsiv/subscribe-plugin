@@ -57,6 +57,13 @@ class SeedTables extends Seeder
             'color' => '#ff0000',
         ]);
 
+        Status::create([
+            'id' => 8,
+            'code' => 'new',
+            'name' => 'New',
+            'color' => '#999999',
+        ]);
+
         Plan::create([
             'name' => 'Basic Monthly',
             'code' => 'basic-month',
