@@ -79,8 +79,9 @@ class Status extends Model
 
     public static function getByCode($code)
     {
-        if (array_key_exists($code, static::$codeCache))
+        if (array_key_exists($code, static::$codeCache)) {
             return static::$codeCache[$code];
+        }
 
         $status = static::whereCode($code)->first();
 

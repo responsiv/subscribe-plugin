@@ -19,6 +19,7 @@ class CreateServicesTable extends Migration
             $table->decimal('membership_price', 15, 2)->nullable();
             $table->integer('trial_days')->nullable();
             $table->integer('grace_days')->nullable();
+            $table->integer('renewal_period')->nullable();
 
             $table->integer('count_renewal')->nullable();
             $table->integer('count_fail')->nullable();

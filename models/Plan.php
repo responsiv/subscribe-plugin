@@ -81,7 +81,7 @@ class Plan extends Model
             $fields->plan_year_interval->hidden = true;
         }
 
-        if ($planType != self::TYPE_LIFETIME) {
+        if ($planType == self::TYPE_LIFETIME) {
             $fields->renewal_period->hidden = true;
         }
 

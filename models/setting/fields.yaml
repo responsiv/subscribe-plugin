@@ -14,6 +14,19 @@ tabs:
             label: Trial period (days)
             comment: Specify the number of free days given to a new membership.
 
+        is_trial_inclusive:
+            label: Inclusive trial period
+            comment: Include the trial as credit towards the first renewal period.
+            type: checkbox
+
         grace_days:
             label: Grace period (days)
             comment: Specify the number of days where a plan can be unpaid but still active.
+
+        invoice_advance_days:
+            label: Invoice in advance (days)
+            comment: Specify how many days an invoice should be sent before renewal.
+
+        invoice_advance_reminders:
+            label: Number of reminders
+            comment: How many invoice reminders should be sent.

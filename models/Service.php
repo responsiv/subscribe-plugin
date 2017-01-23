@@ -133,6 +133,7 @@ class Service extends Model
         $this->name = $plan->name;
         $this->price = $plan->price;
         $this->setup_price = $plan->setup_price;
+        $this->renewal_period = $plan->renewal_period;
 
         /*
          * Trial period
@@ -167,6 +168,7 @@ class Service extends Model
             $this->activated_at = $now;
             $this->next_assessment_at = $nextBillingDate;
             $this->delay_activated_at = null;
+            $this->is_active = true;
 
             $status = Status::getStatusActive();
             StatusLog::createRecord($status->id, $this, $comment);
@@ -228,6 +230,7 @@ class Service extends Model
         /*
          * Current start and end times
          */
+        $this->is_active = true;
         $this->current_period_start = $membership->trial_period_start;
         $this->current_period_end = $membership->trial_period_end;
         $this->next_assessment_at = $membership->trial_period_end;
@@ -236,9 +239,214 @@ class Service extends Model
         Event::fire('responsiv.subscribe.membershipTrialStarted', $this);
     }
 
+    /**
+     * Grace membership
+     */
+    public function startGracePeriod($comment = null)
+    {
+        $now = $this->freshTimestamp();
+
+        $status = Status::getStatusGrace();
+        StatusLog::createRecord($status->id, $this, $comment);
+
+        $graceEnd = $now->addDays($this->grace_days);
+
+        /*
+         * Current start and end times
+         */
+        $this->current_period_start = $now;
+        $this->current_period_end = $graceEnd;
+        $this->next_assessment = $graceEnd;
+        $this->save();
+
+        Event::fire('responsiv.subscribe.membershipGraceStarted', $this);
+
+        return true;
+    }
+
+    //
+    // Renew membership
+    //
+
+    /**
+     * Renew membership
+     */
+    public function renewService()
+    {
+        if (!$this->canRenewService()) {
+            return false;
+        }
+
+        $now = $this->freshTimestamp();
+        $endDate = $this->plan->getPeriodEndDate($this->current_period_end);
+
+        /*
+         * New start and end dates
+         */
+        $this->current_period_start = $this->current_period_end;
+        $this->current_period_end = $endDate;
+
+        /*
+         * Add the renewal
+         */
+        $this->count_renewal++;
+
+        /*
+         * Next assessment to today to capture billing
+         */
+        $this->next_assessment = $now;
+        $this->save();
+
+        return true;
+    }
+
+    /**
+     * Can the membership be renewed
+     */
+    public function canRenewService()
+    {
+        /*
+         * Does this membership renew
+         */
+        if (!$this->plan->isRenewable()) {
+            return false;
+        }
+
+        /*
+         * Missing end date
+         */
+        if (!$this->current_period_end) {
+            return false;
+        }
+
+        /*
+         * Order cancelled
+         */
+        if ($this->cancelled_at) {
+            return false;
+        }
+
+        /*
+         * No renew when on grace
+         */
+        $graceStatus = Status::getStatusGrace();
+        if ($this->status_id == $graceStatus->id) {
+            return false;
+        }
+
+        /*
+         * No renew when on trial
+         */
+        $trialStatus = Status::getStatusTrial();
+        if ($this->status_id == $trialStatus->id) {
+            return false;
+        }
+
+        /*
+         * Membership has another billing period
+         */
+        $endDate = $this->plan->getPeriodEndDate($this->current_period_end);
+        if (!$endDate) {
+            return false;
+        }
+
+        return true;
+    }
+
+    //
+    // Utils
+    //
+
+    /*
+     * No payment - default dunning strategy
+     */
+    public function noPayment($comment = null)
+    {
+        $status = Status::getStatusPastDue();
+        StatusLog::createRecord($status->id, $this, $comment);
+    }
+
+    /**
+     * Cancels this service, either from a specified date or immediately.
+     */
+    public function cancelService($fromDate = null, $atTermEnd = null, $comment = null)
+    {
+        $now = $this->freshTimestamp();
+        $cancelDay = null;
+
+        if ($fromDate) {
+            $cancelDay = $fromDate;
+        }
+        elseif ($atTermEnd && $this->current_period_end) {
+            $cancelDay = $this->current_period_end;
+        }
+
+        $isFuture = $cancelDay ? $cancelday > $current : false;
+
+        /*
+         * Not a future cancellation, cancel it now
+         */
+        if (!$isFuture) {
+
+            $status = Status::getStatusCancelled();
+            StatusLog::createRecord($status->id, $this, $comment);
+
+            $this->cancelled_at = $cancelDay ?: $now;
+            $this->delay_cancelled_at = null;
+            $this->next_assessment_at = null;
+
+            Event::fire('responsiv.subscribe.serviceCancelled', $this);
+        }
+        /*
+         * Cancel at a future date
+         */
+        else {
+            $this->delay_cancelled_at = $cancelDay ?: $now;
+        }
+
+        $this->save();
+    }
+
+    /**
+     * Complete service
+     */
+    public function completeService($comment = null)
+    {
+        $now = $this->freshTimestamp();
+
+        $status = Status::getStatusComplete();
+        StatusLog::createRecord($status->id, $this, $comment);
+
+        /*
+         * Completed date
+         */
+        $this->expired_at = $now;
+        $this->current_period_start = null;
+        $this->current_period_end = null;
+        $this->trial_period_start = null;
+        $this->trial_period_end = null;
+
+        /*
+         * No longer collect payments
+         */
+        $this->next_assessment_at = null;
+        $this->save();
+
+        Event::fire('responsiv.subscribe.serviceCompleted', $this);
+
+        return true;
+    }
+
     //
     // Invoicing
     //
+
+    public function hasUnpaidInvoices()
+    {
+        return InvoiceItem::applyRelated($this)->whereHas('invoice', function($q) {
+            $q->applyUnpaid();
+        })->count() > 0;
+    }
 
     /**
      * Populates an invoices items, returns the primary item.
@@ -289,7 +497,13 @@ class Service extends Model
     {
         $statusCode = $this->status ? $this->status->code : null;
 
-        if ($statusCode == Status::STATUS_NEW) {
+        // Non strict @todo
+        // if ($statusCode == Status::STATUS_TRIAL) {
+        //     $this->delay_activated_at = trial_ends_at
+        // }
+
+        // Strict trial policy
+        if ($statusCode == Status::STATUS_NEW || $statusCode == Status::STATUS_TRIAL) {
             $this->count_renewal = 1;
             $this->activateService();
         }
@@ -308,6 +522,7 @@ class Service extends Model
             /*
              * Change next assessment to period end date if available
              */
+            $this->is_active = true;
             $this->next_assessment_at = $this->current_period_end
                 ? $this->current_period_end
                 : null;
@@ -338,7 +553,7 @@ class Service extends Model
             $currentEnd = $this->current_period_end;
         }
 
-        $start = $this->renewal_period ? $this->renewal_period + 1 : 1;
+        $start = $this->count_renewal ? $this->count_renewal + 1 : 1;
 
         if ($this->plan->plan_type == Plan::TYPE_LIFETIME) {
             return $schedules;

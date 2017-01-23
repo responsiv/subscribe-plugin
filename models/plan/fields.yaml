@@ -55,14 +55,6 @@ tabs:
             type: number
             span: right
 
-        renewal_period:
-            tab: Product
-            label: Renewal period
-            comment: Number of renewal periods before the subscription ends. Leave the field empty for unlimited renewals.
-            dependsOn: plan_type
-            type: number
-            span: right
-
         plan_year_interval:
             tab: Product
             label: Renewal interval (years)
@@ -85,11 +77,20 @@ tabs:
             type: dropdown
             dependsOn: [plan_type, plan_monthly_behavior]
 
+        renewal_period:
+            tab: Product
+            label: Renewal period
+            comment: Number of renewal periods before the subscription ends. Leave the field empty for unlimited renewals.
+            dependsOn: plan_type
+            type: number
+            span: left
+
         tax_class:
             tab: Product
             label: Tax Class
             type: relation
             emptyOption: -- use default --
+            span: right
 
         is_custom_membership:
             tab: Product
