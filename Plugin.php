@@ -95,7 +95,7 @@ class Plugin extends PluginBase
                 'description' => 'Configure settings that apply to memberships.',
                 'icon'        => 'icon-exchange',
                 'class'       => 'Responsiv\Subscribe\Models\Setting',
-                'category'    => 'Subscriptions',
+                'category'    => 'Pay',
                 'order'       => 500,
             ],
         ];
