@@ -52,12 +52,13 @@ class MembershipTest extends PluginTestCase
         $this->assertEquals('Processed 1 membership(s).', $worker->process());
 
         // Pretend the above happened a month ago
-        $service = $this->unrenewService($service, 31);
-        $membership = $this->resetProcessedAt($membership);
+        $this->unrenewService($service, 31);
+        $this->resetProcessedAt($membership);
 
         // Should hit grace status
         $this->assertEquals('Processed 1 membership(s).', $worker->process());
         $service = Service::find($service->id);
+        $membership = Membership::find($membership->id);
 
         $this->assertEquals(2, $membership->invoices()->count());
         $this->assertEquals(Status::STATUS_GRACE, $service->status->code);
@@ -104,8 +105,6 @@ class MembershipTest extends PluginTestCase
 
         $service->next_assessment_at = $now;
         $service->save();
-
-        return Service::find($service->id);
     }
 
     protected function resetProcessedAt($membership)
@@ -114,7 +113,5 @@ class MembershipTest extends PluginTestCase
 
         $membership->last_process_at = $now;
         $membership->save();
-
-        return Membership::find($membership->id);
     }
 }
