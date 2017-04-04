@@ -12,29 +12,6 @@
     <?php endif ?>
     <p class="description">since: <?= Backend::date($formModel->status_updated_at) ?></p>
 </div>
-<?php if ($user = $formModel->user): ?>
-    <?php
-        $userLink = Backend::url('rainlab/user/users/preview/'.$user->id);
-    ?>
-    <div class="scoreboard-item title-value">
-        <h4>User</h4>
-        <p><?= $user->name ?></p>
-        <p class="description">
-            <a href="<?= $userLink ?>">
-                <?= $user->email ?>
-            </a>
-        </p>
-    </div>
-<?php else: ?>
-    <div class="scoreboard-item title-value">
-        <h4>User</h4>
-        <p><em>Unknown user</em></p>
-        <p class="description">
-            This user may have deactivated their account.
-        </p>
-    </div>
-<?php endif ?>
-
 <?php if ($plan = $formModel->plan): ?>
     <div class="scoreboard-item title-value">
         <h4>Plan</h4>

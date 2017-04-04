@@ -8,3 +8,8 @@ This plugin requires the following plugins:
 - [Responsiv.Pay](http://octobercms.com/plugin/responsiv-pay)
 - [RainLab.User](http://octobercms.com/plugin/rainlab-user)
 - [RainLab.Location](http://octobercms.com/plugin/rainlab-location)
+
+
+Developer notes:
+
+- The original periods are the running period of your subscription, the current periods are the current period of the given status.

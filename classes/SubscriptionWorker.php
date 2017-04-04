@@ -50,6 +50,8 @@ class SubscriptionWorker
      */
     public function process()
     {
+        $this->isReady = true;
+
         $methods = [
             'processMemberships',
             'processAutoBilling'
@@ -187,53 +189,50 @@ class SubscriptionWorker
      */
     protected function checkServiceRenew($service)
     {
-        $graceStatus = StatusModel::getStatusGrace();
-        $trialStatus = StatusModel::getStatusTrial();
-        $completeStatus = StatusModel::getStatusComplete();
-
-        if (
-            $service->current_period_end &&
-            $service->current_period_end <= $this->now
-        ) {
-            /*
-             * Grace ended
-             */
-            if ($service->status_id == $graceStatus->id) {
-                $service->noPayment('Grace ended');
-            }
-            /*
-             * Trial ended
-             */
-            elseif ($service->status_id == $trialStatus->id) {
-                $service->noPayment('Trial ended');
-            }
-            /*
-             * Service complete
-             */
-            elseif ($service->status_id = $completeStatus->id) {
-                // Do nothing
-            }
-            /*
-             * Invoice check
-             */
-            else {
-                $allPaid = !$service->hasUnpaidInvoices();
-                $canRenew = $service->canRenewService();
-
-                if ($allPaid && $canRenew) {
-                    $this->subscriptionManager->renewServiceWithInvoice($service);
-                }
-                elseif ($service->grace_days && $service->status_id != $graceStatus->id) {
-                    $service->startGracePeriod();
-                }
-                elseif ($allPaid) {
-                    $service->completeService('Does not renew');
-                }
-            }
-            return true;
+        if (!$service->hasPeriodEnded()) {
+            return false;
         }
 
-        return false;
+        $statusCode = $service->status ? $service->status->code : null;
+
+        /*
+         * Grace ended
+         */
+        if ($statusCode == StatusModel::STATUS_GRACE) {
+            $service->noPayment('Grace ended');
+        }
+        /*
+         * Trial ended
+         */
+        elseif ($statusCode == StatusModel::STATUS_TRIAL) {
+            $service->noPayment('Trial ended');
+        }
+        /*
+         * Service complete
+         */
+        elseif ($statusCode == StatusModel::STATUS_COMPLETE) {
+            // Do nothing
+        }
+        /*
+         * Invoice check
+         */
+        elseif ($statusCode == StatusModel::STATUS_ACTIVE) {
+            $allPaid = !$service->hasUnpaidInvoices();
+            $canRenew = $service->canRenewService();
+
+            if ($allPaid && $canRenew) {
+                $this->subscriptionManager->attemptRenewService($service);
+            }
+            elseif ($allPaid) {
+                $service->completeService('Does not renew');
+            }
+            else {
+                // Not sure how it would end up here
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

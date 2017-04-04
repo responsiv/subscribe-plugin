@@ -35,9 +35,7 @@ class Plugin extends PluginBase
      */
     public function register()
     {
-        $manager = SubscriptionManager::instance();
-
-        Event::listen('responsiv.pay.invoicePaid', [$manager, 'invoiceAfterPayment']);
+        $this->registerSubscriptionEvents();
 
         /*
          * Console commands
@@ -130,5 +128,14 @@ class Plugin extends PluginBase
             'responsiv.subscribe::mail.new_membership_internal' => 'Sent to the store team members when an membership changes its status.',
             'responsiv.subscribe::mail.membership_status_update_internal' => 'Sent to the store team members on new membership.',
         ];
+    }
+
+    /**
+     * Register events related to this plugin
+     */
+    public function registerSubscriptionEvents()
+    {
+        $manager = SubscriptionManager::instance();
+        Event::listen('responsiv.pay.invoicePaid', [$manager, 'invoiceAfterPayment']);
     }
 }

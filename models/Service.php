@@ -161,10 +161,8 @@ class Service extends Model
          * Check if this is a not future activation date
          */
         if ($currentBillingDate <= $now) {
-            $this->original_period_start = $currentBillingDate;
-            $this->original_period_end = $nextBillingDate;
-            $this->current_period_start = $currentBillingDate;
-            $this->current_period_end = $nextBillingDate;
+            $this->current_period_start = $this->original_period_start = $currentBillingDate;
+            $this->current_period_end = $this->original_period_end = $nextBillingDate;
             $this->activated_at = $now;
             $this->next_assessment_at = $nextBillingDate;
             $this->delay_activated_at = null;
@@ -239,6 +237,11 @@ class Service extends Model
         Event::fire('responsiv.subscribe.membershipTrialStarted', $this);
     }
 
+    public function hasGracePeriod()
+    {
+        return !!$this->grace_days;
+    }
+
     /**
      * Grace membership
      */
@@ -256,7 +259,7 @@ class Service extends Model
          */
         $this->current_period_start = $now;
         $this->current_period_end = $graceEnd;
-        $this->next_assessment = $graceEnd;
+        $this->next_assessment_at = $graceEnd;
         $this->save();
 
         Event::fire('responsiv.subscribe.membershipGraceStarted', $this);
@@ -278,13 +281,14 @@ class Service extends Model
         }
 
         $now = $this->freshTimestamp();
-        $endDate = $this->plan->getPeriodEndDate($this->current_period_end);
+        $startDate = $this->original_period_end;
+        $endDate = $this->plan->getPeriodEndDate($startDate);
 
         /*
          * New start and end dates
          */
-        $this->current_period_start = $this->current_period_end;
-        $this->current_period_end = $endDate;
+        $this->current_period_start = $this->original_period_start = $startDate;
+        $this->current_period_end = $this->original_period_end = $endDate;
 
         /*
          * Add the renewal
@@ -294,10 +298,16 @@ class Service extends Model
         /*
          * Next assessment to today to capture billing
          */
-        $this->next_assessment = $now;
+        $this->next_assessment_at = $now;
         $this->save();
 
         return true;
+    }
+
+    public function hasPeriodEnded()
+    {
+        return $this->current_period_end &&
+            $this->current_period_end <= $this->freshTimestamp();
     }
 
     /**
@@ -323,14 +333,6 @@ class Service extends Model
          * Order cancelled
          */
         if ($this->cancelled_at) {
-            return false;
-        }
-
-        /*
-         * No renew when on grace
-         */
-        $graceStatus = Status::getStatusGrace();
-        if ($this->status_id == $graceStatus->id) {
             return false;
         }
 
@@ -506,6 +508,19 @@ class Service extends Model
         if ($statusCode == Status::STATUS_NEW || $statusCode == Status::STATUS_TRIAL) {
             $this->count_renewal = 1;
             $this->activateService();
+        }
+        elseif ($statusCode == Status::STATUS_GRACE) {
+            $this->renewService();
+
+            /*
+             * Active status
+             */
+            $status = Status::getStatusActive();
+            $this->setRelation('status', $status);
+            StatusLog::createRecord($status->id, $this, $comment);
+        }
+        elseif ($statusCode == Status::STATUS_ACTIVE && $this->hasPeriodEnded()) {
+            $this->renewService();
         }
         elseif (
             $statusCode == Status::STATUS_PASTDUE &&
