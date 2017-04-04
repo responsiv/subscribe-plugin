@@ -22,11 +22,17 @@ class MembershipTest extends PluginTestCase
 
         $plugin = $this->getPluginObject();
         $plugin->registerSubscriptionEvents();
+
+        SubscriptionManager::instance()->clearCache();
     }
 
-    public function testCreateMembership()
+    /**
+     * When a paid membership is paid, then cannot be paid automatically,
+     * then is paid manually during the grace period.
+     */
+    public function testMembershipActiveGraceActive()
     {
-        list($user, $plan, $membership, $service, $invoice) = $this->generateMembership();
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership();
         $worker = SubscriptionWorker::instance();
 
         $this->assertNotNull(
@@ -42,8 +48,8 @@ class MembershipTest extends PluginTestCase
 
         // Pay the first invoice, activate membership
         $invoice->submitManualPayment('Testing');
-        $invoice = Invoice::find($invoice->id);
-        $service = Service::find($service->id);
+
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
 
         $this->assertEquals(InvoiceStatus::STATUS_PAID, $invoice->status->code);
         $this->assertEquals(Status::STATUS_ACTIVE, $service->status->code);
@@ -51,14 +57,12 @@ class MembershipTest extends PluginTestCase
         // For brevity
         $this->assertEquals('Processed 1 membership(s).', $worker->process());
 
-        // Pretend the above happened a month ago
-        $this->unrenewService($service, 31);
-        $this->resetProcessedAt($membership);
+        // Pretend the above happened a month ago (1 month subscription)
+        $this->rewindService($service, 31);
 
         // Should hit grace status
         $this->assertEquals('Processed 1 membership(s).', $worker->process());
-        $service = Service::find($service->id);
-        $membership = Membership::find($membership->id);
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
 
         $this->assertEquals(2, $membership->invoices()->count());
         $this->assertEquals(Status::STATUS_GRACE, $service->status->code);
@@ -69,13 +73,88 @@ class MembershipTest extends PluginTestCase
 
         // Pay the outstanding invoice
         $invoice->submitManualPayment('Testing');
-        $invoice = Invoice::find($invoice->id);
-        $service = Service::find($service->id);
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
 
         $this->assertEquals(InvoiceStatus::STATUS_PAID, $invoice->status->code);
         $this->assertEquals(Status::STATUS_ACTIVE, $service->status->code);
     }
 
+    /**
+     * When a paid membership is paid, then cannot be paid automatically,
+     * then is never paid during the grace period and it expires.
+     */
+    public function testMembershipActiveGracePastDue()
+    {
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership();
+        $worker = SubscriptionWorker::instance();
+
+        $this->assertNotNull(
+            $membership,
+            $service,
+            $service->status,
+            $invoice,
+            $invoice->status
+        );
+
+        $this->assertEquals(InvoiceStatus::STATUS_APPROVED, $invoice->status->code);
+        $this->assertEquals(Status::STATUS_NEW, $service->status->code);
+
+        // Pay the first invoice, activate membership
+        $invoice->submitManualPayment('Testing');
+
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
+
+        $this->assertEquals(InvoiceStatus::STATUS_PAID, $invoice->status->code);
+        $this->assertEquals(Status::STATUS_ACTIVE, $service->status->code);
+
+        // For brevity
+        $this->assertEquals('Processed 1 membership(s).', $worker->process());
+
+        // Pretend the above happened a month ago (1 month subscription)
+        $this->rewindService($service, 31);
+
+        // Should hit grace status
+        $this->assertEquals('Processed 1 membership(s).', $worker->process());
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
+
+        $this->assertEquals(2, $membership->invoices()->count());
+        $this->assertEquals(Status::STATUS_GRACE, $service->status->code);
+
+        // Pretend the above happened 15 days ago (14 day grace period)
+        $this->rewindService($service, 15, false);
+
+        // Should hit past due status
+        $this->assertEquals('Processed 1 membership(s).', $worker->process());
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
+
+        $this->assertEquals(2, $membership->invoices()->count());
+        $this->assertEquals(Status::STATUS_PASTDUE, $service->status->code);
+
+
+
+        // Get the unpaid invoice
+        // $invoice = $membership->raiseInvoice();
+        // $this->assertEquals(InvoiceStatus::STATUS_APPROVED, $invoice->status->code);
+
+        // // Pay the outstanding invoice
+        // $invoice->submitManualPayment('Testing');
+        // list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
+
+        // $this->assertEquals(InvoiceStatus::STATUS_PAID, $invoice->status->code);
+        // $this->assertEquals(Status::STATUS_ACTIVE, $service->status->code);
+    }
+
+    protected function reloadMembership(array $payload)
+    {
+        list($user, $plan, $membership, $service, $invoice) = $payload;
+
+        $plan = Plan::find($plan->id);
+        $membership = Membership::find($membership->id);
+        $service = Service::find($service->id);
+        $invoice = Invoice::find($invoice->id);
+
+        return [$user, $plan, $membership, $service, $invoice];
+    }
     protected function generateMembership()
     {
         $user = AuthManager::instance()->register([
@@ -93,18 +172,25 @@ class MembershipTest extends PluginTestCase
         return [$user, $plan, $membership, $service, $invoice];
     }
 
-    protected function unrenewService($service, $days)
+    protected function rewindService($service, $days, $includeOriginal = true)
     {
         $now = Carbon::now()->subDays($days);
 
         $startDate = $service->current_period_start->subDays($days);
         $endDate = $service->current_period_end->subDays($days);
 
-        $service->current_period_start = $service->original_period_start = $startDate;
-        $service->current_period_end = $service->original_period_end = $endDate;
+        $service->current_period_start = $startDate;
+        $service->current_period_end = $endDate;
+
+        if ($includeOriginal) {
+            $service->original_period_start = $startDate;
+            $service->original_period_end = $endDate;
+        }
 
         $service->next_assessment_at = $now;
         $service->save();
+
+        $this->resetProcessedAt($service->membership);
     }
 
     protected function resetProcessedAt($membership)

@@ -36,9 +36,11 @@ class SubscriptionManager
 
         $service->raiseInvoiceItem($invoice);
 
-        $invoice = $invoice->reload();
         $invoice->updateInvoiceStatus(InvoiceStatus::STATUS_APPROVED);
+
         $invoice->touchTotals();
+
+        $invoice->reload();
 
         /*
          * If invoice is for $0, process a fake payment
@@ -100,4 +102,8 @@ class SubscriptionManager
         return $this->membershipInvoiceCache[$id] = $invoice;
     }
 
+    public function clearCache()
+    {
+        $this->membershipInvoiceCache = [];
+    }
 }
