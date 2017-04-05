@@ -43,6 +43,7 @@ class CreateServicesTable extends Migration
             $table->dateTime('delay_activated_at')->nullable();
             $table->dateTime('delay_cancelled_at')->nullable();
 
+            $table->integer('user_id')->unsigned()->nullable()->index();
             $table->integer('plan_id')->unsigned()->nullable()->index();
             $table->integer('status_id')->unsigned()->nullable()->index();
             $table->integer('membership_id')->unsigned()->nullable()->index();

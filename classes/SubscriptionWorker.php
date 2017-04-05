@@ -199,13 +199,13 @@ class SubscriptionWorker
          * Grace ended
          */
         if ($statusCode == StatusModel::STATUS_GRACE) {
-            $service->noPayment('Grace ended');
+            $service->pastDueService('Grace ended');
         }
         /*
          * Trial ended
          */
         elseif ($statusCode == StatusModel::STATUS_TRIAL) {
-            $service->noPayment('Trial ended');
+            $service->pastDueService('Trial ended');
         }
         /*
          * Service complete

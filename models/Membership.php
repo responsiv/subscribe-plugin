@@ -56,11 +56,6 @@ class Membership extends Model
         'services' => [Service::class, 'delete' => true],
     ];
 
-    public $morphMany = [
-        'invoices' => [Invoice::class, 'name' => 'related'],
-        'invoice_items' => [InvoiceItem::class, 'name' => 'related'],
-    ];
-
     //
     // Creation
     //
@@ -86,7 +81,6 @@ class Membership extends Model
     {
         extract(array_merge([
             'plan' => null,
-            'invoice' => null,
             'guest' => false
         ], $options));
 
@@ -94,21 +88,20 @@ class Membership extends Model
             throw new ApplicationException('Membership is missing a plan!');
         }
 
-        if (!$invoice) {
-            $invoice = $this->raiseInvoice();
+        if ($plan->hasTrialPeriod()) {
+            $this->setTrialPeriodFromPlan($plan);
         }
+
+        $service = Service::createForMembership($this, $plan);
+
+        $invoice = $service->invoice;
 
         if ($plan->hasMembershipPrice()) {
             $this->raiseInvoiceMembershipFee($invoice, $plan->getMembershipPrice());
         }
 
-        if ($plan->hasTrialPeriod()) {
-            $this->setTrialPeriodFromPlan($plan);
-        }
-
-        $service = Service::createForMembership($this, $plan, $invoice);
-
         $invoice->updateInvoiceStatus(InvoiceStatus::STATUS_APPROVED);
+
         $invoice->touchTotals();
 
         $this->save();
@@ -141,30 +134,6 @@ class Membership extends Model
     // Invoicing
     //
 
-    public function raiseInvoice()
-    {
-        if (!$this->exists) {
-            throw new ApplicationException('Please create the membership before initialization');
-        }
-
-        if (!$user = $this->user) {
-            throw new ApplicationException('Membership is missing a user!');
-        }
-
-        $invoice = Invoice::applyUnpaid()->applyUser($user)->applyRelated($this);
-
-        if ($this->is_throwaway) {
-            $invoice->applyThrowaway();
-        }
-
-        $invoice = $invoice->first() ?: Invoice::makeForUser($user);
-        $invoice->is_throwaway = $this->is_throwaway;
-        $invoice->related = $this;
-        $invoice->save();
-
-        return $invoice;
-    }
-
     public function raiseInvoiceMembershipFee(Invoice $invoice, $price)
     {
         $item = InvoiceItem::applyRelated($this)
@@ -183,24 +152,6 @@ class Membership extends Model
         }
 
         return $item;
-    }
-
-    /**
-     * Receive a payment
-     */
-    public function receivePayment($invoice)
-    {
-        if (!$invoice || !$invoice->items) {
-            return;
-        }
-
-        foreach ($invoice->items as $item) {
-            if ($item->related && $item->related instanceof Service) {
-                $service = $item->related;
-                $service->setRelation('membership', $this);
-                $service->receivePayment($invoice, $item);
-            }
-        }
     }
 
     //

@@ -2,6 +2,7 @@
 
 use Model;
 use Event;
+use RainLab\User\Models\User;
 use Responsiv\Pay\Models\Invoice;
 use Responsiv\Pay\Models\InvoiceItem;
 use ApplicationException;
@@ -63,9 +64,11 @@ class Service extends Model
         'membership'    => Membership::class,
         'plan'          => Plan::class,
         'status'        => Status::class,
+        'user'          => User::class,
     ];
 
     public $morphMany = [
+        'invoices' => [Invoice::class, 'name' => 'related'],
         'invoice_items' => [InvoiceItem::class, 'name' => 'related'],
     ];
 
@@ -73,19 +76,21 @@ class Service extends Model
         'related' => []
     ];
 
-    public static function createForMembership(Membership $membership, Plan $plan, Invoice $invoice = null)
+    public static function createForMembership(Membership $membership, Plan $plan)
     {
         $service = static::firstOrCreate([
             'plan_id' => $plan->id,
-            'membership_id' => $membership->id
+            'membership_id' => $membership->id,
+            'user_id' => $membership->user_id,
+            'is_throwaway' => $membership->is_throwaway,
         ]);
 
+        $service->setRelation('user', $membership->user);
         $service->setRelation('plan', $plan);
         $service->setRelation('membership', $membership);
 
         $service->initService([
             'membership' => $membership,
-            'invoice' => $invoice,
             'plan' => $plan,
         ]);
 
@@ -109,7 +114,7 @@ class Service extends Model
         }
 
         if (!$invoice) {
-            $invoice = $membership->raiseInvoice();
+            $invoice = $this->raiseInvoice();
         }
 
         if ($plan->hasSetupPrice()) {
@@ -360,12 +365,21 @@ class Service extends Model
     //
 
     /*
-     * No payment - default dunning strategy
+     * Cancels the service, due to no pamynet.
      */
-    public function noPayment($comment = null)
+    public function pastDueService($comment = null)
     {
         $status = Status::getStatusPastDue();
         StatusLog::createRecord($status->id, $this, $comment);
+
+        $this->cancelled_at = $this->freshTimestamp();
+        $this->delay_cancelled_at = null;
+        $this->next_assessment_at = null;
+        $this->is_active = false;
+
+        Event::fire('responsiv.subscribe.servicePastDue', $this);
+
+        $this->save();
     }
 
     /**
@@ -396,6 +410,7 @@ class Service extends Model
             $this->cancelled_at = $cancelDay ?: $now;
             $this->delay_cancelled_at = null;
             $this->next_assessment_at = null;
+            $this->is_active = false;
 
             Event::fire('responsiv.subscribe.serviceCancelled', $this);
         }
@@ -432,6 +447,7 @@ class Service extends Model
          * No longer collect payments
          */
         $this->next_assessment_at = null;
+        $this->is_active = false;
         $this->save();
 
         Event::fire('responsiv.subscribe.serviceCompleted', $this);
@@ -448,6 +464,30 @@ class Service extends Model
         return InvoiceItem::applyRelated($this)->whereHas('invoice', function($q) {
             $q->applyUnpaid();
         })->count() > 0;
+    }
+
+    public function raiseInvoice()
+    {
+        if (!$this->exists) {
+            throw new ApplicationException('Please create the service before initialization');
+        }
+
+        if (!$user = $this->user) {
+            throw new ApplicationException('Service is missing a user!');
+        }
+
+        $invoice = Invoice::applyUnpaid()->applyUser($user)->applyRelated($this);
+
+        if ($this->is_throwaway) {
+            $invoice->applyThrowaway();
+        }
+
+        $invoice = $invoice->first() ?: Invoice::makeForUser($user);
+        $invoice->is_throwaway = $this->is_throwaway;
+        $invoice->related = $this;
+        $invoice->save();
+
+        return $invoice;
     }
 
     /**
@@ -495,7 +535,7 @@ class Service extends Model
     /**
      * Receive a payment
      */
-    public function receivePayment($invoice, $item, $comment = null)
+    public function receivePayment($invoice, $comment = null)
     {
         $statusCode = $this->status ? $this->status->code : null;
 
@@ -521,28 +561,6 @@ class Service extends Model
         }
         elseif ($statusCode == Status::STATUS_ACTIVE && $this->hasPeriodEnded()) {
             $this->renewService();
-        }
-        elseif (
-            $statusCode == Status::STATUS_PASTDUE &&
-            $this->count_fail &&
-            $this->count_fail > 0
-        ) {
-            /*
-             * Make service active
-             */
-            $status = Status::getStatusActive();
-            $this->setRelation('status', $status);
-            StatusLog::createRecord($status->id, $this, $comment);
-
-            /*
-             * Change next assessment to period end date if available
-             */
-            $this->is_active = true;
-            $this->next_assessment_at = $this->current_period_end
-                ? $this->current_period_end
-                : null;
-
-            $this->save();
         }
     }
 

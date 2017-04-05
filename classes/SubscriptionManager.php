@@ -3,7 +3,7 @@
 use Db;
 use Carbon\Carbon;
 use Responsiv\Subscribe\Models\Status as StatusModel;
-use Responsiv\Subscribe\Models\Membership as MembershipModel;
+use Responsiv\Subscribe\Models\Service as ServiceModel;
 use Responsiv\Pay\Models\InvoiceStatus;
 use Exception;
 
@@ -14,15 +14,15 @@ class SubscriptionManager
 {
     use \October\Rain\Support\Traits\Singleton;
 
-    protected $membershipInvoiceCache = [];
+    protected $serviceInvoiceCache = [];
 
     public function invoiceAfterPayment($invoice)
     {
-        if (!$membership = $this->getMembershipFromInvoice($invoice)) {
+        if (!$service = $this->getServiceFromInvoice($invoice)) {
             return;
         }
 
-        $membership->receivePayment($invoice);
+        $service->receivePayment($invoice);
     }
 
     public function attemptRenewService($service)
@@ -30,9 +30,7 @@ class SubscriptionManager
         /*
          * Raise a new invoice
          */
-        $membership = $service->membership;
-
-        $invoice = $this->getInvoiceFromMembership($membership);
+        $invoice = $this->getInvoiceFromService($service);
 
         $service->raiseInvoiceItem($invoice);
 
@@ -66,7 +64,7 @@ class SubscriptionManager
                     $service->startGracePeriod('Automatic payment failed');
                 }
                 else {
-                    $service->noPayment('Automatic payment failed');
+                    $service->pastDueService('Automatic payment failed');
                 }
             }
         }
@@ -76,12 +74,12 @@ class SubscriptionManager
     // Internals
     //
 
-    protected function getMembershipFromInvoice($invoice)
+    protected function getServiceFromInvoice($invoice)
     {
         if (
             $invoice &&
             $invoice->related &&
-            $invoice->related instanceof MembershipModel
+            $invoice->related instanceof ServiceModel
         ) {
             return $invoice->related;
         }
@@ -89,21 +87,21 @@ class SubscriptionManager
         return null;
     }
 
-    protected function getInvoiceFromMembership($membership)
+    protected function getInvoiceFromService($service)
     {
-        $id = $membership->id;
+        $id = $service->id;
 
-        if (isset($this->membershipInvoiceCache[$id])) {
-            return $this->membershipInvoiceCache[$id];
+        if (isset($this->serviceInvoiceCache[$id])) {
+            return $this->serviceInvoiceCache[$id];
         }
 
-        $invoice = $membership->raiseInvoice();
+        $invoice = $service->raiseInvoice();
 
-        return $this->membershipInvoiceCache[$id] = $invoice;
+        return $this->serviceInvoiceCache[$id] = $invoice;
     }
 
     public function clearCache()
     {
-        $this->membershipInvoiceCache = [];
+        $this->serviceInvoiceCache = [];
     }
 }

@@ -64,11 +64,11 @@ class MembershipTest extends PluginTestCase
         $this->assertEquals('Processed 1 membership(s).', $worker->process());
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
 
-        $this->assertEquals(2, $membership->invoices()->count());
+        $this->assertEquals(2, $service->invoices()->count());
         $this->assertEquals(Status::STATUS_GRACE, $service->status->code);
 
         // Get the unpaid invoice
-        $invoice = $membership->raiseInvoice();
+        $invoice = $service->raiseInvoice();
         $this->assertEquals(InvoiceStatus::STATUS_APPROVED, $invoice->status->code);
 
         // Pay the outstanding invoice
@@ -117,7 +117,7 @@ class MembershipTest extends PluginTestCase
         $this->assertEquals('Processed 1 membership(s).', $worker->process());
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
 
-        $this->assertEquals(2, $membership->invoices()->count());
+        $this->assertEquals(2, $service->invoices()->count());
         $this->assertEquals(Status::STATUS_GRACE, $service->status->code);
 
         // Pretend the above happened 15 days ago (14 day grace period)
@@ -127,14 +127,12 @@ class MembershipTest extends PluginTestCase
         $this->assertEquals('Processed 1 membership(s).', $worker->process());
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
 
-        $this->assertEquals(2, $membership->invoices()->count());
+        $this->assertEquals(2, $service->invoices()->count());
         $this->assertEquals(Status::STATUS_PASTDUE, $service->status->code);
 
-
-
         // Get the unpaid invoice
-        // $invoice = $membership->raiseInvoice();
-        // $this->assertEquals(InvoiceStatus::STATUS_APPROVED, $invoice->status->code);
+        $invoice = $service->raiseInvoice();
+        $this->assertEquals(InvoiceStatus::STATUS_VOID, $invoice->status->code);
 
         // // Pay the outstanding invoice
         // $invoice->submitManualPayment('Testing');
@@ -143,6 +141,10 @@ class MembershipTest extends PluginTestCase
         // $this->assertEquals(InvoiceStatus::STATUS_PAID, $invoice->status->code);
         // $this->assertEquals(Status::STATUS_ACTIVE, $service->status->code);
     }
+
+    //
+    // Helpers
+    //
 
     protected function reloadMembership(array $payload)
     {
@@ -167,7 +169,7 @@ class MembershipTest extends PluginTestCase
 
         $membership = Membership::createForUser($user, $plan);
         $service = $membership->services->first();
-        $invoice = $membership->invoices->first();
+        $invoice = $service->invoices->first();
 
         return [$user, $plan, $membership, $service, $invoice];
     }
