@@ -14,5 +14,6 @@ class Setting extends Model
         $this->membership_fee = 0;
         $this->trial_days = 0;
         $this->grace_days = 14;
+        $this->is_trial_inclusive = false;
     }
 }

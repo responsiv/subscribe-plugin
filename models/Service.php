@@ -5,6 +5,7 @@ use Event;
 use RainLab\User\Models\User;
 use Responsiv\Pay\Models\Invoice;
 use Responsiv\Pay\Models\InvoiceItem;
+use Responsiv\Pay\Models\InvoiceStatus;
 use ApplicationException;
 
 /**
@@ -153,6 +154,33 @@ class Service extends Model
         }
     }
 
+    public function activateOrDelayService($comment = null)
+    {
+        $plan = $this->plan;
+        $now = $this->freshTimestamp();
+        $activateAt = $this->delay_activated_at ?: $now;
+
+        $currentBillingDate = $plan->getPeriodStartDate($activateAt);
+
+        /*
+         * Check if this is a not future activation date
+         */
+        if ($currentBillingDate <= $now) {
+            $this->activateService($comment);
+        }
+        else {
+            $this->delay_activated_at = $currentBillingDate;
+            $this->is_active = false;
+
+            $status = Status::getStatusPending();
+            StatusLog::createRecord($status->id, $this, $comment);
+
+            Event::fire('responsiv.subscribe.serviceActivatedLater', $this);
+        }
+
+        $this->save();
+    }
+
     public function activateService($comment = null)
     {
         $plan = $this->plan;
@@ -162,30 +190,17 @@ class Service extends Model
         $currentBillingDate = $plan->getPeriodStartDate($activateAt);
         $nextBillingDate = $plan->getPeriodEndDate($currentBillingDate);
 
-        /*
-         * Check if this is a not future activation date
-         */
-        if ($currentBillingDate <= $now) {
-            $this->current_period_start = $this->original_period_start = $currentBillingDate;
-            $this->current_period_end = $this->original_period_end = $nextBillingDate;
-            $this->activated_at = $now;
-            $this->next_assessment_at = $nextBillingDate;
-            $this->delay_activated_at = null;
-            $this->is_active = true;
+        $this->current_period_start = $this->original_period_start = $currentBillingDate;
+        $this->current_period_end = $this->original_period_end = $nextBillingDate;
+        $this->activated_at = $now;
+        $this->next_assessment_at = $nextBillingDate;
+        $this->delay_activated_at = null;
+        $this->is_active = true;
 
-            $status = Status::getStatusActive();
-            StatusLog::createRecord($status->id, $this, $comment);
+        $status = Status::getStatusActive();
+        StatusLog::createRecord($status->id, $this, $comment);
 
-            Event::fire('responsiv.subscribe.serviceActivated', $this);
-        }
-        else {
-            $this->delay_activated_at = $currentBillingDate;
-
-            $status = Status::getStatusPending();
-            StatusLog::createRecord($status->id, $this, $comment);
-
-            Event::fire('responsiv.subscribe.serviceActivatedLater', $this);
-        }
+        Event::fire('responsiv.subscribe.serviceActivated', $this);
 
         $this->save();
     }
@@ -379,6 +394,8 @@ class Service extends Model
 
         Event::fire('responsiv.subscribe.servicePastDue', $this);
 
+        $this->voidUnpaidInvoices();
+
         $this->save();
     }
 
@@ -413,6 +430,8 @@ class Service extends Model
             $this->is_active = false;
 
             Event::fire('responsiv.subscribe.serviceCancelled', $this);
+
+            $this->voidUnpaidInvoices();
         }
         /*
          * Cancel at a future date
@@ -461,9 +480,7 @@ class Service extends Model
 
     public function hasUnpaidInvoices()
     {
-        return InvoiceItem::applyRelated($this)->whereHas('invoice', function($q) {
-            $q->applyUnpaid();
-        })->count() > 0;
+        return Invoice::applyUnpaid()->applyRelated($this)->count() > 0;
     }
 
     public function raiseInvoice()
@@ -539,10 +556,12 @@ class Service extends Model
     {
         $statusCode = $this->status ? $this->status->code : null;
 
-        // Non strict @todo
-        // if ($statusCode == Status::STATUS_TRIAL) {
-        //     $this->delay_activated_at = trial_ends_at
-        // }
+        $isTrialInclusive = Setting::get('is_trial_inclusive');
+
+        // Non strict
+        if ($isTrialInclusive && $statusCode == Status::STATUS_TRIAL) {
+            $this->delay_activated_at = $this->current_period_end;
+        }
 
         // Strict trial policy
         if ($statusCode == Status::STATUS_NEW || $statusCode == Status::STATUS_TRIAL) {
@@ -561,6 +580,15 @@ class Service extends Model
         }
         elseif ($statusCode == Status::STATUS_ACTIVE && $this->hasPeriodEnded()) {
             $this->renewService();
+        }
+    }
+
+    public function voidUnpaidInvoices()
+    {
+        $invoices = Invoice::applyUnpaid()->applyRelated($this)->get();
+
+        foreach ($invoices as $invoice) {
+            $invoice->updateInvoiceStatus(InvoiceStatus::STATUS_VOID);
         }
     }
 

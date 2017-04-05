@@ -164,7 +164,7 @@ class SubscriptionWorker
             $service->delay_activated_at <= $this->now
         ) {
             $service->count_renewal = 1;
-            $service->activateService();
+            $service->activateOrDelayService();
             return true;
         }
 

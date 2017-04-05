@@ -257,8 +257,8 @@ class Plan extends Model
         if ($this->hasTrialPeriod()) {
             $message .= sprintf(
                 'Trial period for %s %s then ',
-                $this->trial_days,
-                Str::plural('day', $this->trial_days)
+                $this->getTrialPeriod(),
+                Str::plural('day', $this->getTrialPeriod())
             );
         }
 
