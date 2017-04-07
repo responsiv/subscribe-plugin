@@ -44,8 +44,8 @@ class TrialPeriodTest extends PluginTestCase
         $this->assertFalse(Setting::get('is_trial_inclusive'));
         $this->assertEquals(InvoiceStatus::STATUS_APPROVED, $invoice->status->code);
         $this->assertEquals(Status::STATUS_TRIAL, $service->status->code);
-        $this->assertEquals(Carbon::now(), $service->current_period_start);
-        $this->assertEquals(Carbon::now()->addDays(7), $service->current_period_end);
+        $this->assertEquals(Carbon::now(), $service->current_period_start, '', 5);
+        $this->assertEquals(Carbon::now()->addDays(7), $service->current_period_end, '', 5);
         $this->assertEquals(1, $service->is_active);
 
         // Pretend the above happened a 3 days ago (arbitrary number)
@@ -59,7 +59,7 @@ class TrialPeriodTest extends PluginTestCase
         $this->assertEquals(InvoiceStatus::STATUS_PAID, $invoice->status->code);
         $this->assertEquals(Status::STATUS_ACTIVE, $service->status->code);
         $this->assertEquals(1, $service->count_renewal);
-        $this->assertEquals(Carbon::now(), $service->current_period_start);
+        $this->assertEquals(Carbon::now(), $service->current_period_start, '', 5);
     }
 
     /**
@@ -78,8 +78,8 @@ class TrialPeriodTest extends PluginTestCase
         $this->assertTrue(Setting::get('is_trial_inclusive'));
         $this->assertEquals(InvoiceStatus::STATUS_APPROVED, $invoice->status->code);
         $this->assertEquals(Status::STATUS_TRIAL, $service->status->code);
-        $this->assertEquals(Carbon::now(), $service->current_period_start);
-        $this->assertEquals(Carbon::now()->addDays(7), $service->current_period_end);
+        $this->assertEquals(Carbon::now(), $service->current_period_start, '', 5);
+        $this->assertEquals(Carbon::now()->addDays(7), $service->current_period_end, '', 5);
         $this->assertEquals(1, $service->is_active);
 
         // Pretend the above happened a 3 days ago (arbitrary number)
@@ -94,7 +94,7 @@ class TrialPeriodTest extends PluginTestCase
         $this->assertEquals(Status::STATUS_ACTIVE, $service->status->code);
         $this->assertEquals(1, $service->count_renewal);
         $this->assertEquals(1, $service->is_active);
-        $this->assertEquals(Carbon::now()->addDays(4), $service->current_period_start);
+        $this->assertEquals(Carbon::now()->addDays(4), $service->current_period_start, '', 5);
     }
 
     /**
