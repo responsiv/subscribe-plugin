@@ -74,23 +74,21 @@ trait MembershipHelper
         return InvoiceManager::instance()->raiseServiceInvoice($service);
     }
 
-    protected function timeTravelMonth($month = 1)
+    protected function timeTravelMonth($months = 1)
     {
-        $now = clone $this->engine->now();
-
-        $now->addMonth($month);
-
-        $this->engine->now($now);
-        $this->worker->now = $now;
-
-        return clone $now;
+        return $this->timeTravel('addMonth', $months);
     }
 
     protected function timeTravelDay($days = 1)
     {
+        return $this->timeTravel('addDays', $days);
+    }
+
+    protected function timeTravel($method, $units)
+    {
         $now = clone $this->engine->now();
 
-        $now->addDays($days);
+        $now->$method($units);
 
         $this->engine->now($now);
         $this->worker->now = $now;

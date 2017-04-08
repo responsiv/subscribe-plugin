@@ -63,8 +63,8 @@ class TrialPeriodTest extends PluginTestCase
 
         $this->assertEquals($now, $service->service_period_start, '', 5);
         $this->assertEquals($now, $service->current_period_start, '', 5);
-        $this->assertEquals($end, $service->current_period_end, '', 5);
         $this->assertEquals($end, $service->service_period_end, '', 5);
+        $this->assertEquals($end, $service->current_period_end, '', 5);
     }
 
     /**
@@ -104,8 +104,8 @@ class TrialPeriodTest extends PluginTestCase
 
         $this->assertEquals($start, $service->service_period_start, '', 5);
         $this->assertEquals($start, $service->current_period_start, '', 5);
-        $this->assertEquals($end, $service->current_period_end, '', 5);
         $this->assertEquals($end, $service->service_period_end, '', 5);
+        $this->assertEquals($end, $service->current_period_end, '', 5);
     }
 
     /**
