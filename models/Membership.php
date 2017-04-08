@@ -6,6 +6,7 @@ use RainLab\User\Models\User;
 use Responsiv\Pay\Models\Invoice;
 use Responsiv\Pay\Models\InvoiceItem;
 use Responsiv\Pay\Models\InvoiceStatus;
+use Responsiv\Subscribe\Classes\MembershipManager;
 use ApplicationException;
 
 /**
@@ -69,89 +70,12 @@ class Membership extends Model
 
         $membership->setRelation('user', $user);
 
-        $membership->initMembership([
+        MembershipManager::instance()->initMembership($membership, [
             'guest' => $isGuest,
             'plan' => $plan
         ]);
 
         return $membership;
-    }
-
-    public function initMembership($options = [])
-    {
-        extract(array_merge([
-            'plan' => null,
-            'guest' => false
-        ], $options));
-
-        if (!$plan) {
-            throw new ApplicationException('Membership is missing a plan!');
-        }
-
-        if ($plan->hasTrialPeriod()) {
-            $this->setTrialPeriodFromPlan($plan);
-        }
-
-        $service = Service::createForMembership($this, $plan);
-
-        $invoice = $service->invoice;
-
-        if ($plan->hasMembershipPrice()) {
-            $this->raiseInvoiceMembershipFee($invoice, $plan->getMembershipPrice());
-        }
-
-        $invoice->updateInvoiceStatus(InvoiceStatus::STATUS_APPROVED);
-
-        $invoice->touchTotals();
-
-        $this->save();
-    }
-
-    //
-    // Trial period
-    //
-
-    public function setTrialPeriodFromPlan(Plan $plan)
-    {
-        $current = $this->freshTimestamp();
-        $trialDays = $plan->getTrialPeriod();
-
-        $this->is_trial_used = true;
-        $this->trial_period_start = $current;
-        $this->trial_period_end = $current->addDays($trialDays);
-    }
-
-    public function isTrialActive()
-    {
-        if (!$this->is_trial_used) {
-            return false;
-        }
-
-        return $this->trial_period_end->isFuture();
-    }
-
-    //
-    // Invoicing
-    //
-
-    public function raiseInvoiceMembershipFee(Invoice $invoice, $price)
-    {
-        $item = InvoiceItem::applyRelated($this)
-            ->applyInvoice($invoice)
-            ->first()
-        ;
-
-        if (!$item) {
-            $item = new InvoiceItem;
-            $item->invoice = $invoice;
-            $item->related = $this;
-            $item->quantity = 1;
-            $item->price = $price;
-            $item->description = 'Membership fee';
-            $item->save();
-        }
-
-        return $item;
     }
 
     //
@@ -168,6 +92,19 @@ class Membership extends Model
         }
 
         return $options;
+    }
+
+    //
+    // Getters
+    //
+
+    public function isTrialActive()
+    {
+        if (!$this->is_trial_used) {
+            return false;
+        }
+
+        return $this->trial_period_end > MembershipManager::instance()->now;
     }
 
     //

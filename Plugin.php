@@ -2,7 +2,7 @@
 
 use Event;
 use Backend;
-use Responsiv\Subscribe\Classes\SubscriptionManager;
+use Responsiv\Subscribe\Classes\SubscriptionEngine;
 use System\Classes\PluginBase;
 
 /**
@@ -135,7 +135,7 @@ class Plugin extends PluginBase
      */
     public function registerSubscriptionEvents()
     {
-        $manager = SubscriptionManager::instance();
+        $manager = SubscriptionEngine::instance();
         Event::listen('responsiv.pay.invoicePaid', [$manager, 'invoiceAfterPayment']);
     }
 }

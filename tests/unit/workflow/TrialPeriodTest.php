@@ -7,7 +7,7 @@ use Responsiv\Subscribe\Models\Status;
 use Responsiv\Subscribe\Models\Service;
 use Responsiv\Subscribe\Models\Membership;
 use Responsiv\Subscribe\Models\Setting;
-use Responsiv\Subscribe\Classes\SubscriptionManager;
+use Responsiv\Subscribe\Classes\SubscriptionEngine;
 use Responsiv\Subscribe\Classes\SubscriptionWorker;
 use Responsiv\Pay\Models\Invoice;
 use Responsiv\Pay\Models\InvoiceStatus;
@@ -34,11 +34,9 @@ class TrialPeriodTest extends PluginTestCase
     public function testWorkflow_Trial_Active_NonInclusive()
     {
         Setting::set('is_trial_inclusive', false);
-
         $plan = $this->setUpPlan();
 
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership($plan);
-
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
         $this->assertFalse(Setting::get('is_trial_inclusive'));
@@ -48,8 +46,7 @@ class TrialPeriodTest extends PluginTestCase
         $this->assertEquals(Carbon::now()->addDays(7), $service->current_period_end, '', 5);
         $this->assertEquals(1, $service->is_active);
 
-        // Pretend the above happened a 3 days ago (arbitrary number)
-        $this->rewindService($service, 3);
+        $now = $this->timeTravelDay(3);
 
         // Pay the first invoice, activate membership
         $invoice->submitManualPayment('Testing');
@@ -59,7 +56,15 @@ class TrialPeriodTest extends PluginTestCase
         $this->assertEquals(InvoiceStatus::STATUS_PAID, $invoice->status->code);
         $this->assertEquals(Status::STATUS_ACTIVE, $service->status->code);
         $this->assertEquals(1, $service->count_renewal);
-        $this->assertEquals(Carbon::now(), $service->current_period_start, '', 5);
+
+        $start = clone $now;
+        $end = clone $start;
+        $end = $end->addMonth();
+
+        $this->assertEquals($now, $service->service_period_start, '', 5);
+        $this->assertEquals($now, $service->current_period_start, '', 5);
+        $this->assertEquals($end, $service->current_period_end, '', 5);
+        $this->assertEquals($end, $service->service_period_end, '', 5);
     }
 
     /**
@@ -68,11 +73,9 @@ class TrialPeriodTest extends PluginTestCase
     public function testWorkflow_Trial_Active_Inclusive()
     {
         Setting::set('is_trial_inclusive', true);
-
         $plan = $this->setUpPlan();
 
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership($plan);
-
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
         $this->assertTrue(Setting::get('is_trial_inclusive'));
@@ -82,8 +85,7 @@ class TrialPeriodTest extends PluginTestCase
         $this->assertEquals(Carbon::now()->addDays(7), $service->current_period_end, '', 5);
         $this->assertEquals(1, $service->is_active);
 
-        // Pretend the above happened a 3 days ago (arbitrary number)
-        $this->rewindService($service, 3);
+        $now = $this->timeTravelDay(3);
 
         // Pay the first invoice, activate membership
         $invoice->submitManualPayment('Testing');
@@ -94,7 +96,16 @@ class TrialPeriodTest extends PluginTestCase
         $this->assertEquals(Status::STATUS_ACTIVE, $service->status->code);
         $this->assertEquals(1, $service->count_renewal);
         $this->assertEquals(1, $service->is_active);
-        $this->assertEquals(Carbon::now()->addDays(4), $service->current_period_start, '', 5);
+
+        $start = clone $now;
+        $start->addDays(4);
+        $end = clone $start;
+        $end->addMonth();
+
+        $this->assertEquals($start, $service->service_period_start, '', 5);
+        $this->assertEquals($start, $service->current_period_start, '', 5);
+        $this->assertEquals($end, $service->current_period_end, '', 5);
+        $this->assertEquals($end, $service->service_period_end, '', 5);
     }
 
     /**
@@ -105,21 +116,17 @@ class TrialPeriodTest extends PluginTestCase
         $plan = $this->setUpPlan();
 
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership($plan);
-
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
         $this->assertEquals(InvoiceStatus::STATUS_APPROVED, $invoice->status->code);
         $this->assertEquals(Status::STATUS_TRIAL, $service->status->code);
         $this->assertEquals(1, $service->is_active);
 
-        // For brevity
-        $this->assertEquals('Processed 1 membership(s).', $this->worker->process());
+        // Trial period is over after 8 days
+        $this->workerProcess();
+        $this->timeTravelDay(8);
+        $this->workerProcess();
 
-        // Pretend the above happened a 8 days ago (7 day trial period)
-        $this->rewindService($service, 8);
-
-        // Should hit past due status
-        $this->assertEquals('Processed 1 membership(s).', $this->worker->process());
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
 
         $this->assertEquals(1, $service->invoices()->count());

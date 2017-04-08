@@ -8,14 +8,14 @@ use Responsiv\Subscribe\Models\Plan;
 use Responsiv\Subscribe\Models\Status;
 use Responsiv\Subscribe\Models\Service;
 use Responsiv\Subscribe\Models\Membership;
-use Responsiv\Subscribe\Classes\SubscriptionManager;
+use Responsiv\Subscribe\Classes\InvoiceManager;
+use Responsiv\Subscribe\Classes\SubscriptionEngine;
 use Responsiv\Subscribe\Classes\SubscriptionWorker;
 use Responsiv\Pay\Models\Invoice;
 use Responsiv\Pay\Models\InvoiceStatus;
 
 trait MembershipHelper
 {
-
     protected $worker;
 
     protected $manager;
@@ -27,10 +27,11 @@ trait MembershipHelper
         $plugin = $this->getPluginObject();
         $plugin->registerSubscriptionEvents();
 
-        $this->manager = SubscriptionManager::instance();
+        $this->engine = SubscriptionEngine::instance();
         $this->worker = SubscriptionWorker::instance();
 
-        $this->manager->clearCache();
+        $this->engine->reset();
+        $this->worker->now = Carbon::now();
     }
 
     //
@@ -68,32 +69,37 @@ trait MembershipHelper
         return [$user, $plan, $membership, $service, $invoice];
     }
 
-    protected function rewindService($service, $days, $includeOriginal = true)
+    protected function generateInvoice($service)
     {
-        $now = Carbon::now()->subDays($days);
-
-        $startDate = $service->current_period_start->subDays($days);
-        $endDate = $service->current_period_end->subDays($days);
-
-        $service->current_period_start = $startDate;
-        $service->current_period_end = $endDate;
-
-        if ($includeOriginal) {
-            $service->original_period_start = $startDate;
-            $service->original_period_end = $endDate;
-        }
-
-        $service->next_assessment_at = $now;
-        $service->save();
-
-        $this->resetProcessedAt($service->membership);
+        return InvoiceManager::instance()->raiseServiceInvoice($service);
     }
 
-    protected function resetProcessedAt($membership)
+    protected function timeTravelMonth($month = 1)
     {
-        $now = Carbon::now()->subDays(30);
+        $now = clone $this->engine->now();
 
-        $membership->last_process_at = $now;
-        $membership->save();
+        $now->addMonth($month);
+
+        $this->engine->now($now);
+        $this->worker->now = $now;
+
+        return clone $now;
+    }
+
+    protected function timeTravelDay($days = 1)
+    {
+        $now = clone $this->engine->now();
+
+        $now->addDays($days);
+
+        $this->engine->now($now);
+        $this->worker->now = $now;
+
+        return clone $now;
+    }
+
+    protected function workerProcess()
+    {
+        $this->assertEquals('Processed 1 membership(s)', $this->worker->process());
     }
 }

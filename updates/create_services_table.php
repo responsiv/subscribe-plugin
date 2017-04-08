@@ -23,11 +23,10 @@ class CreateServicesTable extends Migration
 
             $table->integer('count_renewal')->nullable();
             $table->integer('count_fail')->nullable();
-            $table->date('original_period_start')->nullable();
-            $table->date('original_period_end')->nullable();
+            $table->date('service_period_start')->nullable();
+            $table->date('service_period_end')->nullable();
             $table->date('current_period_start')->nullable();
             $table->date('current_period_end')->nullable();
-            $table->date('next_assessment_at')->nullable();
             $table->dateTime('status_updated_at')->nullable();
             $table->string('related_id')->index()->nullable();
             $table->string('related_type')->index()->nullable();

@@ -27,12 +27,12 @@ columns:
         sortable: false
         invisible: true
 
-    original_period_start:
+    service_period_start:
         label: Original Period Start
         type: date
         invisible: true
 
-    original_period_end:
+    service_period_end:
         label: Original Period End
         type: date
         invisible: true
@@ -44,11 +44,6 @@ columns:
 
     current_period_end:
         label: Current Period End
-        type: date
-        invisible: true
-
-    next_assessment_at:
-        label: Assessment
         type: date
         invisible: true
 

@@ -1,0 +1,137 @@
+<?php namespace Responsiv\Subscribe\Classes;
+
+use Db;
+use Carbon\Carbon;
+use Responsiv\Subscribe\Models\Status as StatusModel;
+use Responsiv\Subscribe\Models\StatusLog as StatusLogModel;
+use Responsiv\Subscribe\Models\Service as ServiceModel;
+use Responsiv\Subscribe\Models\Setting as SettingModel;
+use Responsiv\Pay\Models\Invoice as InvoiceModel;
+use Responsiv\Pay\Models\InvoiceItem as InvoiceItemModel;
+use Responsiv\Pay\Models\InvoiceStatus as InvoiceStatusModel;
+use Exception;
+
+/**
+ * Invoice engine
+ */
+class InvoiceManager
+{
+    use \October\Rain\Support\Traits\Singleton;
+
+    /**
+     * @var Carbon\Carbon
+     */
+    public $now;
+
+    /**
+     * Initialize this singleton.
+     */
+    protected function init()
+    {
+        $this->now = Carbon::now();
+    }
+
+    //
+    // Invoicing
+    //
+
+    public function raiseServiceInvoice(ServiceModel $service)
+    {
+        if (!$service->exists) {
+            throw new ApplicationException('Please create the service before initialization');
+        }
+
+        if (!$user = $service->user) {
+            throw new ApplicationException('Service is missing a user!');
+        }
+
+        $invoice = InvoiceModel::applyUnpaid()->applyUser($user)->applyRelated($service);
+
+        if ($service->is_throwaway) {
+            $invoice->applyThrowaway();
+        }
+
+        $invoice = $invoice->first() ?: InvoiceModel::makeForUser($user);
+        $invoice->is_throwaway = $service->is_throwaway;
+        $invoice->related = $service;
+        $invoice->save();
+
+        return $invoice;
+    }
+
+    public function raiseServiceSetupFee(InvoiceModel $invoice, ServiceModel $service, $price)
+    {
+        $item = new InvoiceItemModel;
+        $item->invoice = $invoice;
+        $item->quantity = 1;
+        $item->price = $price;
+        $item->description = 'Set up fee';
+        $item->save();
+
+        return $item;
+    }
+
+    /**
+     * Populates an invoices items, returns the primary item.
+     */
+    public function raiseServiceInvoiceItem(InvoiceModel $invoice, ServiceModel $service)
+    {
+        if (!$plan = $service->plan) {
+            throw new ApplicationException('Membership is missing a plan!');
+        }
+
+        $item = InvoiceItemModel::applyRelated($service)
+            ->applyInvoice($invoice)
+            ->first()
+        ;
+
+        if ($item) {
+            return $item;
+        }
+
+        $item = new InvoiceItemModel;
+        $item->invoice = $invoice;
+        $item->quantity = 1;
+        $item->tax_class_id = $plan->tax_class_id;
+        $item->price = $plan->price;
+        $item->description = $plan->name;
+        $item->related = $service;
+        $item->save();
+
+        return $item;
+    }
+
+    public function voidUnpaidService(ServiceModel $service)
+    {
+        $invoices = InvoiceModel::applyUnpaid()->applyRelated($service)->get();
+
+        foreach ($invoices as $invoice) {
+            $invoice->updateInvoiceStatus(InvoiceStatusModel::STATUS_VOID);
+        }
+    }
+
+    //
+    // Invoicing
+    //
+
+    public function raiseMembershipFee(Invoice $invoice, Membership $membership, $price)
+    {
+        $item = InvoiceItemModel::applyRelated($membership)
+            ->applyInvoice($invoice)
+            ->first()
+        ;
+
+        if (!$item) {
+            $item = new InvoiceItemModel;
+            $item->invoice = $invoice;
+            $item->related = $membership;
+            $item->quantity = 1;
+            $item->price = $price;
+            $item->description = 'Membership fee';
+            $item->save();
+        }
+
+        return $item;
+    }
+
+}
