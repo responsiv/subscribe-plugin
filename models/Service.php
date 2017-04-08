@@ -159,29 +159,29 @@ class Service extends Model
         /*
          * Missing end date
          */
-        if (!$this->current_period_end) {
+        if (!$this->service_period_end) {
             return false;
         }
 
         /*
-         * Order cancelled
+         * Service cancelled
          */
         if ($this->cancelled_at) {
             return false;
         }
 
         /*
-         * No renew when on trial
+         * Service must be activated
          */
-        $trialStatus = Status::getStatusTrial();
-        if ($this->status_id == $trialStatus->id) {
+        $statusCode = $this->status ? $this->status->code : null;
+        if ($statusCode == Status::STATUS_NEW || $statusCode == Status::STATUS_TRIAL) {
             return false;
         }
 
         /*
          * Membership has another billing period
          */
-        $endDate = $this->plan->getPeriodEndDate($this->current_period_end);
+        $endDate = $this->plan->getPeriodEndDate($this->service_period_end);
         if (!$endDate) {
             return false;
         }

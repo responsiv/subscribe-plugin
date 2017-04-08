@@ -100,51 +100,6 @@ class ServiceManager
     // Workflow
     //
 
-    public function attemptRenewService(ServiceModel $service)
-    {
-        /*
-         * Raise a new invoice
-         */
-        $invoice = $this->invoiceManager->raiseServiceInvoice($service);
-
-        $this->invoiceManager->raiseServiceInvoiceItem($invoice, $service);
-
-        $invoice->updateInvoiceStatus(InvoiceStatusModel::STATUS_APPROVED);
-
-        $invoice->touchTotals();
-
-        $invoice->reload();
-
-        /*
-         * If invoice is for $0, process a fake payment
-         */
-        if ($invoice->total <= 0) {
-            $invoice->submitManualPayment('Invoice total is zero');
-        }
-        else {
-            /*
-             * Pay from profile
-             */
-            try {
-                throw new Exception('Not implemented yet!');
-            }
-            /*
-             * Payment failed
-             */
-            catch (Exception $ex) {
-                /*
-                 * Grace period
-                 */
-                if ($service->hasGracePeriod()) {
-                    $this->startGracePeriod($service, 'Automatic payment failed');
-                }
-                else {
-                    $this->pastDueService($service, 'Automatic payment failed');
-                }
-            }
-        }
-    }
-
     public function activateOrDelayService(ServiceModel $service, $comment = null)
     {
         $plan = $service->plan;
@@ -338,7 +293,7 @@ class ServiceManager
     /*
      * Service up for renewal
      */
-    public function checkServiceRenew($service)
+    public function checkPeriodEnded($service)
     {
         if (!$service->hasPeriodEnded()) {
             return false;
@@ -372,18 +327,50 @@ class ServiceManager
             $canRenew = $service->canRenewService();
 
             if ($allPaid && $canRenew) {
-                $this->attemptRenewService($service);
+                $this->invoiceManager->raiseServiceRenewalInvoice($service);
             }
             elseif ($allPaid) {
                 $this->completeService($service, 'Does not renew');
             }
-            else {
-                // Not sure how it would end up here
-                return false;
-            }
         }
 
         return true;
+    }
+
+    public function checkAdvanceInvoice($service)
+    {
+        $statusCode = $service->status ? $service->status->code : null;
+
+        if (
+            $statusCode != StatusModel::STATUS_ACTIVE ||
+            $service->hasPeriodEnded() ||
+            !$service->canRenewService()
+        ) {
+            return false;
+        }
+
+        $advanceDays = (int) SettingModel::get('invoice_advance_days', 0);
+
+        if (!$advanceDays || $service->hasUnpaidInvoices()) {
+            return false;
+        }
+
+        $fromDate = clone $service->service_period_end;
+        $fromDate->subDays($advanceDays);
+
+        /*
+         * Catch instances where the advance days exceed the subscription period
+         */
+        if ($fromDate < $service->service_period_start) {
+            $fromDate = $service->service_period_start;
+        }
+
+        /*
+         * Raise the invoice early
+         */
+        if ($this->now > $fromDate) {
+            $this->invoiceManager->raiseServiceRenewalInvoice($service);
+        }
     }
 
     //

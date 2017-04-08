@@ -35,6 +35,54 @@ class InvoiceManager
     // Invoicing
     //
 
+    public function inAdvanceInvoiceWindow(InvoiceModel $invoice, ServiceModel $service)
+    {
+
+    }
+
+    public function attemptAutomaticPayment(InvoiceModel $invoice, ServiceModel $service)
+    {
+        /*
+         * If invoice is for $0, process a fake payment
+         */
+        if ($invoice->total <= 0) {
+            $invoice->submitManualPayment('Invoice total is zero');
+
+            return true;
+        }
+        else {
+            /*
+             * Pay from profile
+             */
+            try {
+                throw new Exception('Not implemented yet!');
+
+                return true;
+            }
+            /*
+             * Payment failed
+             */
+            catch (Exception $ex) {
+                return false;
+            }
+        }
+    }
+
+    public function raiseServiceRenewalInvoice(ServiceModel $service)
+    {
+        $invoice = $this->raiseServiceInvoice($service);
+
+        $this->raiseServiceInvoiceItem($invoice, $service);
+
+        $invoice->updateInvoiceStatus(InvoiceStatusModel::STATUS_APPROVED);
+
+        $invoice->touchTotals();
+
+        $invoice->reload();
+
+        return $invoice;
+    }
+
     public function raiseServiceInvoice(ServiceModel $service)
     {
         if (!$service->exists) {

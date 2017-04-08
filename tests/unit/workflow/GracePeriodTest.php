@@ -42,6 +42,7 @@ class GracePeriodTest extends PluginTestCase
         $this->workerProcess();
         $this->timeTravelDay(32);
         $this->workerProcess();
+        $this->workerProcessBilling();
 
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
 
@@ -90,9 +91,13 @@ class GracePeriodTest extends PluginTestCase
         $this->timeTravelMonth(1);
         $this->workerProcess();
 
+        $this->assertEquals(2, $service->invoices()->count());
+        $this->assertTrue($service->hasUnpaidInvoices());
+
+        $this->workerProcessBilling();
+
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
 
-        $this->assertEquals(2, $service->invoices()->count());
         $this->assertEquals(Status::STATUS_GRACE, $service->status->code);
         $this->assertEquals(1, $service->is_active);
 
@@ -135,10 +140,15 @@ class GracePeriodTest extends PluginTestCase
         $this->timeTravelMonth(1);
         $this->workerProcess();
 
+        $this->assertEquals(2, $service->invoices()->count());
+        $this->assertTrue($service->hasUnpaidInvoices());
+
+        $this->workerProcessBilling();
+
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
 
-        $this->assertEquals(2, $service->invoices()->count());
         $this->assertEquals(Status::STATUS_GRACE, $service->status->code);
+        $this->assertEquals(1, $service->count_renewal);
         $this->assertEquals(1, $service->is_active);
         $this->assertEquals(Carbon::now()->addMonth(), $service->service_period_end, '', 5);
         $this->assertEquals(Carbon::now()->addMonth()->addDays(90), $service->current_period_end, '', 5);
@@ -161,6 +171,7 @@ class GracePeriodTest extends PluginTestCase
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
 
         $this->assertEquals(Status::STATUS_GRACE, $service->status->code);
+        $this->assertEquals(2, $service->count_renewal);
         $this->assertEquals(3, $service->invoices()->count());
         $this->assertEquals(1, $service->is_active);
         $this->assertEquals(Carbon::now()->addMonths(2), $service->service_period_end, '', 5);
@@ -173,6 +184,7 @@ class GracePeriodTest extends PluginTestCase
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
 
         $this->assertEquals(Status::STATUS_GRACE, $service->status->code);
+        $this->assertEquals(3, $service->count_renewal);
         $this->assertEquals(4, $service->invoices()->count());
         $this->assertEquals(1, $service->is_active);
         $this->assertEquals(Carbon::now()->addMonths(3), $service->service_period_end, '', 5);
@@ -185,6 +197,7 @@ class GracePeriodTest extends PluginTestCase
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
 
         $this->assertEquals(Status::STATUS_ACTIVE, $service->status->code);
+        $this->assertEquals(4, $service->count_renewal);
         $this->assertEquals(4, $service->invoices()->count());
         $this->assertEquals(1, $service->is_active);
         $this->assertEquals(Carbon::now()->addMonths(4), $service->service_period_end, '', 5);

@@ -4,8 +4,9 @@ use Carbon\Carbon;
 use Responsiv\Pay\Models\Invoice as InvoiceModel;
 use Responsiv\Pay\Models\InvoiceStatusLog;
 use Responsiv\Subscribe\Models\Status as StatusModel;
-use Responsiv\Subscribe\Models\Membership as MembershipModel;
+use Responsiv\Subscribe\Models\Service as ServiceModel;
 use Responsiv\Subscribe\Models\Schedule as ScheduleModel;
+use Responsiv\Subscribe\Models\Membership as MembershipModel;
 use ApplicationException;
 use Exception;
 
@@ -42,12 +43,12 @@ class SubscriptionWorker
     /*
      * Process all tasks
      */
-    public function process()
+    public function process($method = null)
     {
         $this->isReady = true;
-        $this->logMessage = 'There are no outstanding activities to perform.';
+        $this->logMessage = 'There are no outstanding activities to perform';
 
-        $methods = [
+        $methods = (array) $method ?: [
             'processMemberships',
             'processAutoBilling'
         ];
@@ -69,7 +70,7 @@ class SubscriptionWorker
      *
      * Default frequency: 12 hours
      */
-    public function processMemberships()
+    protected function processMemberships()
     {
         $hours = 4;  // Every 4 hours
         $loop = 100; // Process 100 at a time
@@ -87,19 +88,21 @@ class SubscriptionWorker
                 ->first()
             ;
 
-            if ($membership) {
-                $this->processMembership($membership);
-                $count++;
-
-                $membership->last_process_at = $this->now;
-                $membership->timestamps = false;
-                $membership->forceSave();
+            if (!$membership) {
+                break;
             }
+
+            $this->processMembership($membership);
+            $count++;
+
+            $membership->last_process_at = $this->now;
+            $membership->timestamps = false;
+            $membership->forceSave();
         }
 
         if ($count > 0) {
             $this->logActivity(sprintf(
-                'Processed %s membership(s)',
+                'Processed services for %s membership(s)',
                 $count
             ));
         }
@@ -123,7 +126,11 @@ class SubscriptionWorker
                 continue;
             }
 
-            if ($manager->checkServiceRenew($service)) {
+            if ($manager->checkPeriodEnded($service)) {
+                continue;
+            }
+
+            if ($manager->checkAdvanceInvoice($service)) {
                 continue;
             }
 
@@ -134,9 +141,35 @@ class SubscriptionWorker
     /**
      * Attempt to pay invoices using payment profile
      */
-    public function processAutoBilling()
+    protected function processAutoBilling()
     {
+        $loop = 10; // Process 10 at a time
+        $status = StatusModel::getStatusActive();
+        $engine = SubscriptionEngine::instance();
 
+        $count = 0;
+        for ($i = 0; $i < $loop; $i++) {
+            $service = ServiceModel::make()
+                ->where('status_id', $status->id)
+                ->where('service_period_end', '<=', $this->now)
+                ->first();
+
+            if (!$service) {
+                break;
+            }
+
+            if ($service->hasUnpaidInvoices()) {
+                $engine->attemptRenewService($service);
+                $count++;
+            }
+        }
+
+        if ($count > 0) {
+            $this->logActivity(sprintf(
+                'Processed billing for %s membership(s)',
+                $count
+            ));
+        }
     }
 
     /**

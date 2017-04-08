@@ -133,5 +133,4 @@ class TrialPeriodTest extends PluginTestCase
         $this->assertEquals(Status::STATUS_PASTDUE, $service->status->code);
         $this->assertEquals(0, $service->is_active);
     }
-
 }

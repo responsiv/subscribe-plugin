@@ -26,7 +26,3 @@ tabs:
         invoice_advance_days:
             label: Invoice in advance (days)
             comment: Specify how many days an invoice should be sent before renewal.
-
-        invoice_advance_reminders:
-            label: Number of reminders
-            comment: How many invoice reminders should be sent.

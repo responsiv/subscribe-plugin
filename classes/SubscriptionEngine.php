@@ -109,11 +109,42 @@ class SubscriptionEngine
             $this->serviceManager->renewService($service);
 
             if ($service->hasServicePeriodEnded()) {
-                $this->serviceManager->attemptRenewService($service);
+                $this->attemptRenewService($service);
             }
         }
-        elseif ($statusCode == StatusModel::STATUS_ACTIVE && $service->hasPeriodEnded()) {
+        elseif ($statusCode == StatusModel::STATUS_ACTIVE) {
             $this->serviceManager->renewService($service);
+        }
+    }
+
+    /**
+     * Called at the end of a service period, this will raise an invoice, if not
+     * existing already, and try to pay it.
+     */
+    public function attemptRenewService(ServiceModel $service)
+    {
+        /*
+         * Raise a new invoice
+         */
+        $invoice = $this->invoiceManager->raiseServiceRenewalInvoice($service);
+
+        /*
+         * Attempt to pay the invoice automatically, otherwise the service
+         * enters grace period or is cancelled via past due.
+         */
+        if (!$this->invoiceManager->attemptAutomaticPayment($invoice, $service)) {
+            /*
+             * Grace period
+             */
+            if ($service->hasGracePeriod()) {
+                $this->serviceManager->startGracePeriod($service, 'Automatic payment failed');
+            }
+            /*
+             * Past due / Cancelled
+             */
+            else {
+                $this->serviceManager->pastDueService($service, 'Automatic payment failed');
+            }
         }
     }
 }

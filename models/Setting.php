@@ -11,9 +11,10 @@ class Setting extends Model
 
     public function initSettingsData()
     {
-        $this->membership_fee = 0;
+        $this->membership_price = 0;
         $this->trial_days = 0;
-        $this->grace_days = 14;
         $this->is_trial_inclusive = false;
+        $this->grace_days = 14;
+        $this->invoice_advance_days = 0;
     }
 }

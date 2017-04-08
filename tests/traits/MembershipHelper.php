@@ -96,8 +96,19 @@ trait MembershipHelper
         return clone $now;
     }
 
+    protected function workerProcessBilling()
+    {
+        $this->assertEquals(
+            'Processed billing for 1 membership(s)',
+            $this->worker->process('processAutoBilling')
+        );
+    }
+
     protected function workerProcess()
     {
-        $this->assertEquals('Processed 1 membership(s)', $this->worker->process());
+        $this->assertEquals(
+            'Processed services for 1 membership(s)',
+            $this->worker->process('processMemberships')
+        );
     }
 }
