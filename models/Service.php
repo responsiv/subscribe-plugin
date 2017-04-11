@@ -163,13 +163,13 @@ class Service extends Model
     public function hasPeriodEnded()
     {
         return $this->current_period_end &&
-            $this->current_period_end <= ServiceManager::instance()->now;
+            $this->current_period_end <= $this->freshTimestamp();
     }
 
     public function hasServicePeriodEnded()
     {
         return $this->service_period_end &&
-            $this->service_period_end <= ServiceManager::instance()->now;
+            $this->service_period_end <= $this->freshTimestamp();
     }
 
     /**
@@ -309,5 +309,19 @@ class Service extends Model
     public function scopeApplyActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    //
+    // Utils
+    //
+
+    /**
+     * Get a fresh timestamp for the model.
+     *
+     * @return \Carbon\Carbon
+     */
+    public function freshTimestamp()
+    {
+        return clone ServiceManager::instance()->now;
     }
 }

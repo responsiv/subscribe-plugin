@@ -14,7 +14,7 @@ use PluginTestCase;
 
 class GracePeriodTest extends PluginTestCase
 {
-    use \Responsiv\Subscribe\Tests\Traits\MembershipHelper;
+    use \Responsiv\Subscribe\Tests\Traits\WorkflowHelper;
 
     /**
      * When a paid membership is paid, then cannot be paid automatically,
@@ -128,14 +128,10 @@ class GracePeriodTest extends PluginTestCase
         $plan->grace_days = 90;
         $plan->save();
 
-        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership($plan);
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generatePaidMembership($plan);
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
-        // Pay the first invoice, activate membership
-        $invoice->submitManualPayment('Testing');
-        list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
-
-        // Invoice not paid, grace status activated
+        // Next invoice not paid, grace status activated
         $this->timeTravelMonth(1);
         $this->workerProcess();
 

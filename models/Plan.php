@@ -5,6 +5,7 @@ use Carbon\Carbon;
 use Model;
 use Responsiv\Pay\Models\Tax;
 use Responsiv\Pay\Models\InvoiceItem;
+use Responsiv\Subscribe\Classes\ServiceManager;
 
 /**
  * Plan Model
@@ -108,7 +109,7 @@ class Plan extends Model
     {
         return [
             'monthly_signup'  => ['Signup Date', 'Renew subscription every X months based on the signup date. For example if someone signs up on the 14th, the subscription will renew every month on the 14th.'],
-            'monthly_prorate' => ['Pro-Rated', 'Renew subscription the same day every X months and pro-rate billing for used time. For example if someone signs up on the 14th and your subscription renewal is on the 1st, they will be billed for 16 days at the start of the subscription.'],
+            'monthly_prorate' => ['Prorated', 'Renew subscription the same day every X months and prorate billing for used time. For example if someone signs up on the 14th and your subscription renewal is on the 1st, they will be billed for 16 days at the start of the subscription.'],
             'monthly_free'    => ['Free Days', 'Renew subscription the same day every X months and do not bill until the renewal date. For example if someone signs up on the 14th and your subscription renewal is on the 1st, they will have free access for 16 days until renewal starts on the 1st.'],
             'monthly_none'    => ['Dont Start', 'Renew subscription the same day every X months and do not start the subscription until renewal date. For example if someone signs up on the 14th and your subscription renewal is on the 1st, do not start the subscription until 1st.'],
         ];
@@ -278,7 +279,7 @@ class Plan extends Model
                 );
             }
             elseif ($this->plan_monthly_behavior == 'monthly_prorate') {
-                $message .= sprintf('Renew on the %s of the month and pro-rate billing for used time', Str::ordinal($this->plan_month_day));
+                $message .= sprintf('Renew on the %s of the month and prorate billing for used time', Str::ordinal($this->plan_month_day));
             }
             elseif ($this->plan_monthly_behavior == 'monthly_free') {
                 $message .= sprintf('Renew on the %s of the month and do not bill until the renewal date', Str::ordinal($this->plan_month_day));
@@ -381,13 +382,13 @@ class Plan extends Model
                     $checkEndDay = $this->checkDate($this->plan_month_day, $date->month, $date->year);
 
                     // On the same day
-                    if ($day == $checkEndDay) {
+                    if ($date->day == $checkEndDay) {
                         $result->year = $next->year;
                         $result->month = $next->month;
                         $result->day = $this->checkDate($this->plan_month_day, $next->month, $next->year);
                     }
                     // Is it going to renew this month
-                    elseif ($day < $checkEndDay) {
+                    elseif ($date->day < $checkEndDay) {
                         $result->year = $date->year;
                         $result->month = $date->month;
                         $result->day = $checkEndDay;
@@ -409,11 +410,11 @@ class Plan extends Model
                 }
                 break;
 
-            case self::type_yearly:
+            case self::TYPE_YEARLY:
                 $result = $date->addYears($this->plan_year_interval);
                 break;
 
-            case self::type_lifetime:
+            case self::TYPE_LIFETIME:
                 $result = null;
                 break;
 
@@ -430,12 +431,12 @@ class Plan extends Model
      */
     protected function checkDate($day, $month, $year)
     {
-        //all months have less than 28 days
+        // All months have less than 28 days
         if ($day <= 28) {
             return $day;
         }
 
-        //check if month has a valid day
+        // Check if month has a valid day
         for ($checkDay = $day; $checkDay > 28; $checkDay--) {
             if (checkdate($month, $checkDay, $year)) {
                 return $checkDay;
@@ -443,4 +444,167 @@ class Plan extends Model
         }
     }
 
+    /*
+     * Prorate the price of an item
+     */
+    public function adjustPrice($originalPrice, $currentDate = null)
+    {
+        if ($this->plan_type != self::TYPE_MONTHLY) {
+            return $originalPrice;
+        }
+
+        if ($this->plan_monthly_behavior != 'monthly_prorate') {
+            return $originalPrice;
+        }
+
+        // Get days until next billing
+        $billableDays = $this->daysUntilBilling($currentDate);
+
+        if (!$billableDays || $billableDays <= 0) {
+            return $originalPrice;
+        }
+
+        // Get total days in billing cycle
+        $totalDays = $this->daysInCycle($currentDate);
+
+        if (!$totalDays || $totalDays <= 0) {
+            return $originalPrice;
+        }
+
+        // Set daily rate based on original price divided by days since / until billing day
+        $dayRate = (float) $originalPrice / $totalDays;
+
+        // Prorate the price: total days left in cycle times day rate
+        $newPrice = $billableDays * $dayRate;
+
+        return round($newPrice, 2);
+    }
+
+    /**
+     * Get number of days until the next billing cycle.
+     */
+    public function daysUntilBilling($current = null)
+    {
+        if ($this->plan_type == self::TYPE_LIFETIME) {
+            return null;
+        }
+
+        if (!$current) {
+            $current = $this->freshTimestamp();
+        }
+
+        $days = null;
+
+        switch ($this->plan_type) {
+            case self::TYPE_MONTHLY:
+                if ($this->plan_monthly_behavior == 'monthly_signup') {
+                    break;
+                }
+
+                // Get plan end day of this month
+                $endDay = (int) $this->checkDate(
+                    $this->plan_month_day,
+                    $current->month,
+                    $current->year
+                );
+
+                // On the same day
+                if ($current->day == $endDay) {
+                    $days = 0;
+                    break;
+                }
+
+                // Current day less than the next billing cycle
+                if ($current->day < $endDay) {
+                    $days = $endDay - $current->day;
+                    break;
+                }
+
+                // Current day is greater than the next billing cycle
+                $next = clone $current;
+                $next->addMonth(1);
+
+                $nextDay = (int) $this->checkDate(
+                    $this->plan_month_day,
+                    $next->month,
+                    $next->year
+                );
+
+                $next->day = $nextDay;
+                $days = $next->diffInDays($current);
+                break;
+        }
+
+        return $days;
+    }
+
+    /**
+     * Get how many days are in a billing cycle.
+     *
+     * - daily: day interval
+     * - yearly: yearly interval
+     * - monthly: days in last month if we passed the monthly interval,
+     *            or the days in current month if not.
+     */
+    public function daysInCycle($current = null)
+    {
+        if ($this->plan_type == self::TYPE_LIFETIME) {
+            return null;
+        }
+
+        if (!$current) {
+            $current = $this->freshTimestamp();
+        }
+
+        $days = null;
+
+        switch ($this->plan_type) {
+
+            case self::TYPE_DAILY:
+                $days = $this->plan_day_interval;
+                break;
+
+            case self::TYPE_YEARLY:
+                $days = $this->plan_year_interval;
+                break;
+
+            case self::TYPE_MONTHLY:
+                if ($this->plan_monthly_behavior == 'monthly_signup') {
+                    break;
+                }
+
+                // Get plan end day of this month
+                $endDay = (int) $this->checkDate(
+                    $this->plan_month_day,
+                    $current->month,
+                    $current->year
+                );
+
+                // On the same day
+                if ($current->day == $endDay) {
+                    $days = 0;
+                    break;
+                }
+
+                // If today is less than ending day, look at last month
+                if ($current->day < $endDay) {
+                    $current->subMonth();
+                }
+
+                $days = $current->daysInMonth;
+                break;
+        }
+
+        return $days;
+    }
+
+    /**
+     * Get a fresh timestamp for the model.
+     *
+     * @return \Carbon\Carbon
+     */
+    public function freshTimestamp()
+    {
+        return clone ServiceManager::instance()->now;
+    }
 }

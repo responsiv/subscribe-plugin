@@ -15,7 +15,7 @@ use PluginTestCase;
 
 class AdvanceInvoiceTest extends PluginTestCase
 {
-    use \Responsiv\Subscribe\Tests\Traits\MembershipHelper;
+    use \Responsiv\Subscribe\Tests\Traits\WorkflowHelper;
 
     protected function setUpPlan()
     {

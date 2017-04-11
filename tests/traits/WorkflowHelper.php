@@ -14,7 +14,7 @@ use Responsiv\Subscribe\Classes\SubscriptionWorker;
 use Responsiv\Pay\Models\Invoice;
 use Responsiv\Pay\Models\InvoiceStatus;
 
-trait MembershipHelper
+trait WorkflowHelper
 {
     protected $worker;
 
@@ -65,6 +65,15 @@ trait MembershipHelper
         $invoice = Invoice::find($invoice->id);
 
         return [$user, $plan, $membership, $service, $invoice];
+    }
+
+    protected function generatePaidMembership($plan = null)
+    {
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership($plan);
+
+        $invoice->submitManualPayment('Testing');
+
+        return $this->reloadMembership($payload);
     }
 
     protected function generateMembership($plan = null)

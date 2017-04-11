@@ -14,20 +14,15 @@ use PluginTestCase;
 
 class CancellationTest extends PluginTestCase
 {
-    use \Responsiv\Subscribe\Tests\Traits\MembershipHelper;
+    use \Responsiv\Subscribe\Tests\Traits\WorkflowHelper;
 
     /**
      * When a user pays for their membership then decides to cancel early.
      */
     public function testWorkflow_Active_Cancelled()
     {
-        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership();
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generatePaidMembership();
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
-
-        // Pay the first invoice, activate membership
-        $invoice->submitManualPayment('Testing');
-
-        list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
 
         $this->assertEquals(InvoiceStatus::STATUS_PAID, $invoice->status->code);
         $this->assertEquals(Status::STATUS_ACTIVE, $service->status->code);
@@ -66,13 +61,8 @@ class CancellationTest extends PluginTestCase
 
     public function testWorkflow_Active_Grace_Cancelled()
     {
-        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership();
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generatePaidMembership();
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
-
-        // Pay the first invoice, activate membership
-        $invoice->submitManualPayment('Testing');
-
-        list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
 
         $this->assertEquals(InvoiceStatus::STATUS_PAID, $invoice->status->code);
         $this->assertEquals(Status::STATUS_ACTIVE, $service->status->code);
