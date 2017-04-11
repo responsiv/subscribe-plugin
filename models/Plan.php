@@ -204,6 +204,21 @@ class Plan extends Model
         return $this->plan_type != self::TYPE_LIFETIME;
     }
 
+    /**
+     * Prorated monthy plans must always be trial inclusive.
+     */
+    public function isTrialInclusive()
+    {
+        if (
+            $this->plan_type == self::TYPE_MONTHLY &&
+            $this->plan_monthly_behavior == 'monthly_prorate'
+        ) {
+            return true;
+        }
+
+        return Setting::get('is_trial_inclusive');
+    }
+
     //
     // Attributes
     //

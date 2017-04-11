@@ -165,8 +165,18 @@ class InvoiceManager
         /*
          * First invoice, prorate the price
          */
-        if ($service->count_renewal <= 0) {
-            $price = $plan->adjustPrice($price);
+        $firstInvoice = $service->count_renewal <= 0;
+        if ($firstInvoice) {
+            $startDate = clone $this->now;
+
+            if (
+                // !$service->membership->is_trial_used &&
+                $plan->hasTrialPeriod()
+            ) {
+                $startDate->addDays($plan->getTrialPeriod());
+            }
+
+            $price = $plan->adjustPrice($price, $startDate);
         }
 
         return $price;

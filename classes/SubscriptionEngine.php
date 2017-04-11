@@ -94,7 +94,7 @@ class SubscriptionEngine
     {
         $statusCode = $service->status ? $service->status->code : null;
 
-        $isTrialInclusive = SettingModel::get('is_trial_inclusive');
+        $isTrialInclusive = $service->plan ? $service->plan->isTrialInclusive() : false;
 
         // Include trial as part of the first period
         if ($isTrialInclusive && $statusCode == StatusModel::STATUS_TRIAL) {

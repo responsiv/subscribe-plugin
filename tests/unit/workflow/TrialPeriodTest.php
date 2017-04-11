@@ -41,6 +41,8 @@ class TrialPeriodTest extends PluginTestCase
         $this->assertEquals(Status::STATUS_TRIAL, $service->status->code);
         $this->assertEquals(Carbon::now(), $service->current_period_start, '', 5);
         $this->assertEquals(Carbon::now()->addDays(7), $service->current_period_end, '', 5);
+        $this->assertNull($service->service_period_start);
+        $this->assertNull($service->service_period_end);
         $this->assertEquals(1, $service->is_active);
 
         $now = $this->timeTravelDay(3);
@@ -79,6 +81,9 @@ class TrialPeriodTest extends PluginTestCase
         $this->assertEquals(Status::STATUS_TRIAL, $service->status->code);
         $this->assertEquals(Carbon::now(), $service->current_period_start, '', 5);
         $this->assertEquals(Carbon::now()->addDays(7), $service->current_period_end, '', 5);
+        $this->assertNull($service->service_period_start);
+        $this->assertNull($service->service_period_end);
+
         $this->assertEquals(1, $service->is_active);
 
         $now = $this->timeTravelDay(3);
