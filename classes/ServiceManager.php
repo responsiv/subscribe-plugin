@@ -141,6 +141,7 @@ class ServiceManager
         $service->activated_at = $now;
         $service->delay_activated_at = null;
         $service->is_active = true;
+        $service->count_renewal = 1;
 
         $status = StatusModel::getStatusActive();
         StatusLogModel::createRecord($status->id, $service, $comment);

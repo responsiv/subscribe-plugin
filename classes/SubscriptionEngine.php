@@ -94,16 +94,18 @@ class SubscriptionEngine
     {
         $statusCode = $service->status ? $service->status->code : null;
 
-        $isTrialInclusive = $service->plan ? $service->plan->isTrialInclusive() : false;
 
         // Include trial as part of the first period
-        if ($isTrialInclusive && $statusCode == StatusModel::STATUS_TRIAL) {
-            $service->delay_activated_at = $service->current_period_end;
-        }
+        if ($statusCode == StatusModel::STATUS_TRIAL) {
+            $isTrialInclusive = $service->plan ? $service->plan->isTrialInclusive() : false;
+            if ($isTrialInclusive) {
+                $service->delay_activated_at = $service->current_period_end;
+            }
 
-        if ($statusCode == StatusModel::STATUS_NEW || $statusCode == StatusModel::STATUS_TRIAL) {
-            $service->count_renewal = 1;
             $this->serviceManager->activateService($service);
+        }
+        elseif ($statusCode == StatusModel::STATUS_NEW) {
+            $this->serviceManager->activateOrDelayService($service);
         }
         elseif ($statusCode == StatusModel::STATUS_GRACE) {
             $this->serviceManager->renewService($service);
