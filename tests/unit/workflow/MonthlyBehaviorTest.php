@@ -38,6 +38,7 @@ class MonthlyBehaviorTest extends PluginTestCase
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->generatePaidMembership($plan);
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
+        $this->assertEquals(Carbon::now(), $service->service_period_start, '', 5);
         $this->assertEquals(Carbon::now()->addMonth(), $service->service_period_end, '', 5);
         $this->assertEquals(100, $invoice->total);
     }
@@ -52,7 +53,24 @@ class MonthlyBehaviorTest extends PluginTestCase
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->generatePaidMembership($plan);
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
+        $expectedPrice = $plan->adjustPrice(100);
+
+        $this->assertEquals(1, $service->invoices()->count());
+        $this->assertEquals(Carbon::now(), $service->service_period_start, '', 5);
         $this->assertEquals(Carbon::now()->addDays(10), $service->service_period_end, '', 5);
+        $this->assertEquals($expectedPrice, $invoice->total);
+
+        // Bump to next month, raise the next invoice
+        $this->workerProcess();
+        $this->timeTravelDay(11);
+        $this->timeTravelMonth();
+        $this->workerProcess();
+        $this->workerProcessBilling();
+
+        // Next invoice should be back to normal
+        $invoice = $this->generateInvoice($service);
+        $this->assertEquals(2, $service->invoices()->count());
+        $this->assertEquals(InvoiceStatus::STATUS_APPROVED, $invoice->status->code);
         $this->assertEquals(100, $invoice->total);
     }
 }

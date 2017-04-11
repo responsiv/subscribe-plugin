@@ -35,11 +35,6 @@ class InvoiceManager
     // Invoicing
     //
 
-    public function inAdvanceInvoiceWindow(InvoiceModel $invoice, ServiceModel $service)
-    {
-
-    }
-
     public function attemptAutomaticPayment(InvoiceModel $invoice, ServiceModel $service)
     {
         /*
@@ -125,7 +120,7 @@ class InvoiceManager
     public function raiseServiceInvoiceItem(InvoiceModel $invoice, ServiceModel $service)
     {
         if (!$plan = $service->plan) {
-            throw new ApplicationException('Membership is missing a plan!');
+            throw new ApplicationException('Service is missing a plan!');
         }
 
         $item = InvoiceItemModel::applyRelated($service)
@@ -141,7 +136,7 @@ class InvoiceManager
         $item->invoice = $invoice;
         $item->quantity = 1;
         $item->tax_class_id = $plan->tax_class_id;
-        $item->price = $plan->price;
+        $item->price = $this->getPriceForService($service);
         $item->description = $plan->name;
         $item->related = $service;
         $item->save();
@@ -156,6 +151,25 @@ class InvoiceManager
         foreach ($invoices as $invoice) {
             $invoice->updateInvoiceStatus(InvoiceStatusModel::STATUS_VOID);
         }
+    }
+
+    public function getPriceForService(ServiceModel $service)
+    {
+        if (!$plan = $service->plan) {
+            throw new ApplicationException('Service is missing a plan!');
+        }
+
+        // @todo Look up scheduled pricing here
+        $price = $plan->price;
+
+        /*
+         * First invoice, prorate the price
+         */
+        if ($service->count_renewal <= 0) {
+            $price = $plan->adjustPrice($price);
+        }
+
+        return $price;
     }
 
     //
