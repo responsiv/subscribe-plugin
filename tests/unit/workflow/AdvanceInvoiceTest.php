@@ -40,9 +40,8 @@ class AdvanceInvoiceTest extends PluginTestCase
     {
         // 7 day window
         Setting::set('invoice_advance_days', 7);
-        $plan = $this->setUpPlan();
 
-        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership($plan);
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership();
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
         // Pay the first invoice, activate membership
@@ -83,9 +82,8 @@ class AdvanceInvoiceTest extends PluginTestCase
     {
         // 7 day window
         Setting::set('invoice_advance_days', 7);
-        $plan = $this->setUpPlan();
 
-        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership($plan);
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership();
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
         // Pay the first invoice, activate membership

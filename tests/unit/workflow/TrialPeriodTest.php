@@ -19,10 +19,8 @@ class TrialPeriodTest extends PluginTestCase
 
     protected function setUpPlan()
     {
-        $plan = Plan::whereCode('basic-month')->first();
-        $plan->is_custom_membership = true;
+        $plan = $this->setUpPlanDefault();
         $plan->trial_days = 7;
-        $plan->grace_days = 0;
         $plan->save();
 
         return $plan;
@@ -34,9 +32,8 @@ class TrialPeriodTest extends PluginTestCase
     public function testWorkflow_Trial_Active_NonInclusive()
     {
         Setting::set('is_trial_inclusive', false);
-        $plan = $this->setUpPlan();
 
-        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership($plan);
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership();
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
         $this->assertFalse(Setting::get('is_trial_inclusive'));
@@ -73,9 +70,8 @@ class TrialPeriodTest extends PluginTestCase
     public function testWorkflow_Trial_Active_Inclusive()
     {
         Setting::set('is_trial_inclusive', true);
-        $plan = $this->setUpPlan();
 
-        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership($plan);
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership();
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
         $this->assertTrue(Setting::get('is_trial_inclusive'));
@@ -113,9 +109,7 @@ class TrialPeriodTest extends PluginTestCase
      */
     public function testWorkflow_Trial_PastDue()
     {
-        $plan = $this->setUpPlan();
-
-        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership($plan);
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership();
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
         $this->assertEquals(InvoiceStatus::STATUS_APPROVED, $invoice->status->code);

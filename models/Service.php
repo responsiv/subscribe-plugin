@@ -99,6 +99,34 @@ class Service extends Model
     }
 
     /**
+     * User has opted to cancel the service.
+     */
+    public function cancelService()
+    {
+        ServiceManager::instance()->cancelService($this);
+    }
+
+    /**
+     * Check if the service is scheduled to be cancelled.
+     */
+    public function isCancelled()
+    {
+        if ($this->delay_cancelled_at) {
+            return true;
+        }
+
+        if (!$this->status) {
+            return false;
+        }
+
+        if ($this->status->code != Status::STATUS_CANCELLED) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Check if membership is active
      * @return bool
      */

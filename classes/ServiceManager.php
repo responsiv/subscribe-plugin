@@ -249,7 +249,7 @@ class ServiceManager
         }
 
         if ($service->delay_cancelled_at && $service->delay_cancelled_at <= $this->now) {
-            $this->cancelService($service, null, null, 'Cancelled on delayed cancellation date');
+            $this->cancelServiceNow($service, 'Cancelled on delayed cancellation date');
             return true;
         }
 
@@ -397,34 +397,34 @@ class ServiceManager
     }
 
     /**
-     * Cancels this service, either from a specified date or immediately.
+     * Cancels this service at the end of the current term.
+     *
+     * Available options:
+     *
+     * - atDate: Specify an exact date when the service is to be cancelled.
+     * - atTermEnd: Defer cancellation to the end of the current period, otherwise immediately.
      */
-    public function cancelService(
-        ServiceModel $service,
-        $fromDate = null,
-        $atTermEnd = null,
-        $comment = null
-    ) {
-        $cancelDay = null;
+    public function cancelService(ServiceModel $service, $comment = null, $options = [])
+    {
+        extract(array_merge([
+            'atTermEnd' => true,
+            'atDate' => null,
+        ], $options));
 
-        if ($fromDate) {
-            $cancelDay = $fromDate;
-        }
-        elseif ($atTermEnd && $service->current_period_end) {
-            $cancelDay = $service->current_period_end;
+        if ($atTermEnd && $service->service_period_end) {
+            $atDate = $service->service_period_end;
         }
 
-        $isFuture = $cancelDay ? $cancelday > $current : false;
+        $isFuture = $atDate ? $atDate > $this->now : false;
 
         /*
          * Not a future cancellation, cancel it now
          */
         if (!$isFuture) {
-
             $status = StatusModel::getStatusCancelled();
             StatusLogModel::createRecord($status->id, $service, $comment);
 
-            $service->cancelled_at = $cancelDay ?: $this->now;
+            $service->cancelled_at = $this->now;
             $service->delay_cancelled_at = null;
             $service->is_active = false;
 
@@ -436,10 +436,19 @@ class ServiceManager
          * Cancel at a future date
          */
         else {
-            $service->delay_cancelled_at = $cancelDay ?: $this->now;
+            $service->delay_cancelled_at = $atDate ?: $this->now;
         }
 
         $service->save();
+    }
+
+    /**
+     * Helper to cancel the service immediately.
+     * @see cancelService()
+     */
+    public function cancelServiceNow(ServiceModel $service, $comment = null)
+    {
+        $this->cancelService($service, $comment, ['atTermEnd' => false]);
     }
 
     /**

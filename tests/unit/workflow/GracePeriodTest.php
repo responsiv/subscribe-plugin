@@ -123,13 +123,12 @@ class GracePeriodTest extends PluginTestCase
      */
     public function testWorkflow_Active_Grace_Grace()
     {
-        $plan = Plan::whereCode('basic-month')->first();
-        $plan->is_custom_membership = true;
+        $plan = $this->setUpPlanDefault();
         $plan->trial_days = 0;
         $plan->grace_days = 90;
         $plan->save();
 
-        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership();
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership($plan);
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
         // Pay the first invoice, activate membership

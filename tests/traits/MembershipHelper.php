@@ -34,6 +34,23 @@ trait MembershipHelper
         $this->worker->now = Carbon::now();
     }
 
+    protected function setUpPlanDefault()
+    {
+        $plan = new Plan;
+        $plan->name = 'Testing';
+        $plan->code = 'testing';
+        $plan->price = 10;
+        $plan->trial_days = 0;
+        $plan->grace_days = 14;
+        $plan->plan_type = Plan::TYPE_MONTHLY;
+        $plan->plan_month_interval = 1;
+        $plan->plan_monthly_behavior = 'monthly_signup';
+        $plan->is_custom_membership = true;
+        $plan->save();
+
+        return $plan;
+    }
+
     //
     // Helpers
     //
@@ -59,7 +76,9 @@ trait MembershipHelper
         ]);
 
         if ($plan === null) {
-            $plan = Plan::whereCode('basic-month')->first();
+            $plan = method_exists($this, 'setUpPlan')
+                ? $this->setUpPlan()
+                : $this->setUpPlanDefault();
         }
 
         $membership = Membership::createForUser($user, $plan);
