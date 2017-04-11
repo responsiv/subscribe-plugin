@@ -132,4 +132,53 @@ class TrialPeriodTest extends PluginTestCase
         $this->assertEquals(Status::STATUS_PASTDUE, $service->status->code);
         $this->assertEquals(0, $service->is_active);
     }
+
+    /**
+     * When a user creates a trial account then cancels, this takes immediate effect.
+     */
+    public function testWorkflow_Trial_Cancelled()
+    {
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership();
+        $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
+
+        // This will cancel immediately
+        $service->cancelService('No good');
+        $this->workerProcess();
+
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
+
+        $this->assertTrue($membership->isTrialUsed());
+        $this->assertEquals(Status::STATUS_CANCELLED, $service->status->code);
+
+        // Get the unpaid invoice
+        $invoice = $this->generateInvoice($service);
+        $this->assertEquals(InvoiceStatus::STATUS_VOID, $invoice->status->code);
+    }
+
+    /**
+     * One trial per membership
+     */
+    public function testWorkflow_One_Trial_Only()
+    {
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership();
+        $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
+
+        // This will cancel immediately
+        $service->cancelService('No good');
+        $this->workerProcess();
+
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
+
+        $this->assertTrue($membership->isTrialUsed());
+        $this->assertEquals(Status::STATUS_CANCELLED, $service->status->code);
+
+        // Second service should not include a trial
+        $membership = Membership::createForUser($user, $plan);
+        $service = $membership->services->first();
+        $invoice = $service->invoices->first();
+        $payload = [$user, $plan, $membership, $service, $invoice];
+
+        $this->assertEquals(Status::STATUS_NEW, $service->status->code);
+        $this->assertEquals(0, $service->is_active);
+    }
 }

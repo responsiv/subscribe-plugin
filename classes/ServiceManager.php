@@ -428,6 +428,14 @@ class ServiceManager
             $service->delay_cancelled_at = null;
             $service->is_active = false;
 
+            /*
+             * Cancel any trial agreement prematurely
+             */
+            if (($membership = $service->membership) && $membership->isTrialActive()) {
+                $membership->trial_period_end = $this->now;
+                $membership->save();
+            }
+
             Event::fire('responsiv.subscribe.serviceCancelled', $service);
 
             $this->invoiceManager->voidUnpaidService($service);

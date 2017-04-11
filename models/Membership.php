@@ -98,9 +98,14 @@ class Membership extends Model
     // Getters
     //
 
+    public function isTrialUsed()
+    {
+        return !!$this->is_trial_used;
+    }
+
     public function isTrialActive()
     {
-        if (!$this->is_trial_used) {
+        if (!$this->isTrialUsed()) {
             return false;
         }
 

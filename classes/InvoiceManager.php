@@ -169,11 +169,15 @@ class InvoiceManager
         if ($firstInvoice) {
             $startDate = clone $this->now;
 
+            /*
+             * Prorate from the trial end
+             */
             if (
-                // !$service->membership->is_trial_used &&
-                $plan->hasTrialPeriod()
+                $plan->hasTrialPeriod() &&
+                ($membership = $service->membership) &&
+                $membership->isTrialActive()
             ) {
-                $startDate->addDays($plan->getTrialPeriod());
+                $startDate = $membership->trial_period_end;
             }
 
             $price = $plan->adjustPrice($price, $startDate);

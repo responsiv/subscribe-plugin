@@ -49,7 +49,7 @@ class MembershipManager
             throw new ApplicationException('Membership is missing a plan!');
         }
 
-        if ($plan->hasTrialPeriod()) {
+        if (!$membership->isTrialUsed() && $plan->hasTrialPeriod()) {
             $this->setTrialPeriodFromPlan($membership, $plan);
         }
 

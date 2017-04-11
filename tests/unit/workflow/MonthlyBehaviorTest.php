@@ -75,6 +75,26 @@ class MonthlyBehaviorTest extends PluginTestCase
     }
 
     /**
+     * Prorated plan created on exact day of the month.
+     */
+    public function testWorkflow_Active_Prorated_SameDay()
+    {
+        $plan = $this->setUpPlan();
+        $plan->plan_monthly_behavior = 'monthly_prorate';
+        $plan->plan_month_day = Carbon::now()->day;
+        $plan->save();
+
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generatePaidMembership($plan);
+        $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
+
+        $this->assertEquals(1, $service->count_renewal);
+        $this->assertEquals(1, $service->invoices()->count());
+        $this->assertEquals(Carbon::now(), $service->service_period_start, '', 5);
+        $this->assertEquals(Carbon::now()->addMonth(), $service->service_period_end, '', 5);
+        $this->assertEquals(100, $invoice->total);
+    }
+
+    /**
      * Pro rated plans that use a trial are always considered inclusive.
      */
     public function testWorkflow_Trial_Active_Prorated()
@@ -96,6 +116,7 @@ class MonthlyBehaviorTest extends PluginTestCase
         $this->assertEquals(1, $service->is_active);
 
         $now = $this->timeTravelDay(5);
+        $this->workerProcess();
 
         // Pay the first invoice, activate membership
         $invoice->submitManualPayment('Testing');
@@ -132,6 +153,7 @@ class MonthlyBehaviorTest extends PluginTestCase
         $this->assertEquals(1, $service->is_active);
 
         $now = $this->timeTravelDay(5);
+        $this->workerProcess();
 
         // Pay the first invoice, activate membership
         $invoice->submitManualPayment('Testing');
