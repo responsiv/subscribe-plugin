@@ -8,23 +8,19 @@ fields:
         disabled: true
 
     section_membership:
-        label: Membership details
+        label: Service details
         type: section
 
-    activated:
+    activated_at:
         label: Activated
         span: auto
 
-    period_start:
+    service_period_start:
         label: Period start
         span: auto
 
-    period_end:
+    service_period_end:
         label: Period end
-        span: auto
-
-    next_ass:
-        label: Next assessment
         span: auto
 
     billing_periods:

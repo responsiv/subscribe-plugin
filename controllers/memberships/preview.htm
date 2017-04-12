@@ -22,8 +22,6 @@
     <div class="control-tabs content-tabs tabs-inset" data-control="tab">
         <ul class="nav nav-tabs">
             <li class="active"><a href="#membership">Membership</a></li>
-            <li><a href="#services">Services</a></li>
-            <li><a href="#invoices">Invoices</a></li>
             <li><a href="#notifications">Notifications</a></li>
         </ul>
         <div class="tab-content">
@@ -31,12 +29,6 @@
                 <div class="padded-container">
                     <?= $this->makePartial('tab_membership') ?>
                 </div>
-            </div>
-            <div class="tab-pane pane-inset">
-                <?= $this->relationRender('services') ?>
-            </div>
-            <div class="tab-pane pane-inset">
-                <?= $this->relationRender('invoices') ?>
             </div>
             <div class="tab-pane pane-inset">
                 <div class="padded-container">

@@ -30,6 +30,7 @@ class StatusLog extends Model
     public $belongsTo = [
         'membership' => Membership::class,
         'service'    => Service::class,
+        'status'     => Status::class,
     ];
 
     public static function createRecord($statusId, Service $service, $comment = null)

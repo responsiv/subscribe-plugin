@@ -160,7 +160,7 @@ class InvoiceManager
         }
 
         // @todo Look up scheduled pricing here
-        $price = $plan->price;
+        $price = $service->price ?: $plan->price;
 
         /*
          * First invoice, prorate the price

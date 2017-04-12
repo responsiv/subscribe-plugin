@@ -3,6 +3,19 @@
 # ===================================
 
 columns:
-    id:
-        label: ID
+    status:
+        label: Status
+        relation: status
+        select: name
         searchable: true
+        width: 100px
+
+    created_at:
+        label: Created
+        type: datetime
+        width: 250px
+
+    comment:
+        label: Comment
+        default: No comment provided
+

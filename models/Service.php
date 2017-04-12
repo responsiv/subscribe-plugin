@@ -68,6 +68,10 @@ class Service extends Model
         'user'          => User::class,
     ];
 
+    public $hasMany = [
+        'status_logs'   => StatusLog::class,
+    ];
+
     public $morphMany = [
         'invoices' => [Invoice::class, 'name' => 'related'],
         'invoice_items' => [InvoiceItem::class, 'name' => 'related'],
