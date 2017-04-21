@@ -12,19 +12,18 @@ use Responsiv\Pay\Models\InvoiceItem as InvoiceItemModel;
 use Responsiv\Pay\Models\InvoiceStatus as InvoiceStatusModel;
 use Responsiv\Subscribe\Models\Plan as PlanModel;
 use Responsiv\Subscribe\Models\Membership as MembershipModel;
-use Responsiv\Pay\Classes\TaxLocation;
 use Responsiv\Pay\Models\PaymentMethod;
 use ValidationException;
 use Exception;
 
-class Register extends ComponentBase
+class Subscribe extends ComponentBase
 {
 
     public function componentDetails()
     {
         return [
-            'name'        => 'Register Component',
-            'description' => 'Allows a user to sign up with an accompanying subscription'
+            'name'        => 'Subscribe Component',
+            'description' => 'Creates a new membership with an accompanying subscription'
         ];
     }
 
@@ -43,47 +42,6 @@ class Register extends ComponentBase
     public function getPaymentPageOptions()
     {
         return Page::sortBy('baseFileName')->lists('baseFileName', 'baseFileName');
-    }
-
-    //
-    // Plan selection
-    //
-
-    public function onGetPlan()
-    {
-        $this->page['plan'] = $this->getPlan();
-    }
-
-    protected function getPlan($planId = null)
-    {
-        if (!$planId) {
-            $planId = post('selected_plan');
-        }
-
-        if (!$planId) {
-            return;
-        }
-
-        if ($plan = PlanModel::find($planId)) {
-            $this->setLocationInfoOnPlan($plan);
-        }
-
-        return $plan;
-    }
-
-    protected function setLocationInfoOnPlan($plan)
-    {
-        if (!$countryId = post('country')) {
-            return;
-        }
-
-        $location = new TaxLocation;
-
-        $location->countryId = $countryId;
-
-        if ($taxClass = $plan->getTaxClass()) {
-            $taxClass->setLocationInfo($location);
-        }
     }
 
     //

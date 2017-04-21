@@ -61,9 +61,8 @@ class Plugin extends PluginBase
     public function registerComponents()
     {
         return [
+            'Responsiv\Subscribe\Components\Subscribe'  => 'subscribe',
             'Responsiv\Subscribe\Components\PlanList'   => 'subscribePlanList',
-            'Responsiv\Subscribe\Components\Register'   => 'subscribeRegister',
-            'Responsiv\Subscribe\Components\Membership' => 'subscribeMembership',
         ];
     }
 
