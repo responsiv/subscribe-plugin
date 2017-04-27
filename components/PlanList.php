@@ -22,6 +22,10 @@ class PlanList extends ComponentBase
         return [];
     }
 
+    //
+    // Object properties
+    //
+
     public function plans()
     {
         if ($this->plans !== null) {
@@ -61,7 +65,6 @@ class PlanList extends ComponentBase
     {
         return $this->plans()->where('plan_type', PlanModel::TYPE_LIFETIME);
     }
-
 
     //
     // Plan selection
@@ -103,5 +106,4 @@ class PlanList extends ComponentBase
             $taxClass->setLocationInfo($location);
         }
     }
-
 }

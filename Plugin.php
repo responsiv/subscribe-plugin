@@ -62,6 +62,7 @@ class Plugin extends PluginBase
     {
         return [
             'Responsiv\Subscribe\Components\Subscribe'  => 'subscribe',
+            'Responsiv\Subscribe\Components\Payment'    => 'subscribePayment',
             'Responsiv\Subscribe\Components\PlanList'   => 'subscribePlanList',
         ];
     }

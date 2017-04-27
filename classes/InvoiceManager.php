@@ -35,7 +35,7 @@ class InvoiceManager
     // Invoicing
     //
 
-    public function attemptAutomaticPayment(InvoiceModel $invoice, ServiceModel $service)
+    public function attemptAutomaticPayment(InvoiceModel $invoice)
     {
         /*
          * If invoice is for $0, process a fake payment

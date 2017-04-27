@@ -134,7 +134,7 @@ class SubscriptionEngine
          * Attempt to pay the invoice automatically, otherwise the service
          * enters grace period or is cancelled via past due.
          */
-        if (!$this->invoiceManager->attemptAutomaticPayment($invoice, $service)) {
+        if (!$this->invoiceManager->attemptAutomaticPayment($invoice)) {
             /*
              * Grace period
              */
