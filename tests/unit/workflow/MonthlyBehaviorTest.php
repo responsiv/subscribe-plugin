@@ -171,28 +171,34 @@ class MonthlyBehaviorTest extends PluginTestCase
 
     public function testWorkflow_Active_FreeDays()
     {
+        // Always pretend it is the start of the month
+        $nowOriginal = clone $this->engine->now();
+        $now = Carbon::now()->startOfMonth();
+        $this->engine->now($now);
+
         $plan = $this->setUpPlan();
         $plan->plan_monthly_behavior = 'monthly_free';
-        $plan->plan_month_day = Carbon::now()->addDays(10)->day;
+        $plan->plan_month_day = 10;
         $plan->save();
 
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->generatePaidMembership($plan);
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
+        $now2 = clone $now;
         $this->assertEquals(1, $service->count_renewal);
         $this->assertEquals(1, $service->invoices()->count());
-        $this->assertEquals(Carbon::now(), $service->service_period_start, '', 5);
-        $this->assertEquals(Carbon::now()->addMonth()->addDays(10), $service->service_period_end, '', 5);
+        $this->assertEquals($now, $service->service_period_start, '', 5);
+        $this->assertEquals($now2->addMonth()->addDays(9), $service->service_period_end, '', 5);
         $this->assertEquals(100, $invoice->total);
 
-        // Bump to next month, raise the next invoice
-        $this->workerProcess();
+        // It is now the 12th of the month
         $this->timeTravelDay(11);
         $this->workerProcess();
 
         // Another invoice should not be raised yet
         $this->assertEquals(1, $service->invoices()->count());
 
+        // It is now the 12th of next month
         $this->timeTravelMonth();
         $this->workerProcess();
 
@@ -200,6 +206,51 @@ class MonthlyBehaviorTest extends PluginTestCase
 
         // Second invoice is ready to go 1 month + 11 days later
         $this->assertEquals(2, $service->invoices()->count());
+
+        // Reset
+        $this->engine->now($nowOriginal);
+    }
+
+    public function testWorkflow_Active_FreeDays_Alt()
+    {
+        // Always pretend it is the start of the month
+        $nowOriginal = clone $this->engine->now();
+        $now = Carbon::now()->day(15);
+        $this->engine->now($now);
+
+        $plan = $this->setUpPlan();
+        $plan->plan_monthly_behavior = 'monthly_free';
+        $plan->plan_month_day = 10;
+        $plan->save();
+
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generatePaidMembership($plan);
+        $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
+
+        $now2 = clone $now;
+        $this->assertEquals(1, $service->count_renewal);
+        $this->assertEquals(1, $service->invoices()->count());
+        $this->assertEquals($now, $service->service_period_start, '', 5);
+        $this->assertEquals($now2->addMonth()->day(10), $service->service_period_end, '', 5);
+        $this->assertEquals(100, $invoice->total);
+
+        // It is now the 26th of the month
+        $this->timeTravelDay(11);
+        $this->workerProcess();
+
+        // Another invoice should not be raised yet
+        $this->assertEquals(1, $service->invoices()->count());
+
+        // It is now the 26th of the next month
+        $this->timeTravelMonth();
+        $this->workerProcess();
+
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
+
+        // Second invoice is ready to go 1 month + 11 days later
+        $this->assertEquals(2, $service->invoices()->count());
+
+        // Reset
+        $this->engine->now($nowOriginal);
     }
 
     public function testWorkflow_Active_NoStart()
