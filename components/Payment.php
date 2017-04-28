@@ -133,4 +133,16 @@ class Payment extends ComponentBase
         // Redirect to post('redirect')
         // return Redirect::to($this->returnPageUrl());
     }
+
+    /**
+     * Returns a profile page URL for a payment method
+     */
+    // public function returnPageUrl()
+    // {
+    //     if ($redirect = post('redirect')) {
+    //         return $redirect;
+    //     }
+
+    //     return $this->pageUrl($this->returnPage());
+    // }
 }
