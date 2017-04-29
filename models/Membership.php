@@ -51,6 +51,7 @@ class Membership extends Model
      */
     public $belongsTo = [
         'user' => User::class,
+        'first_service' => Service::class,
     ];
 
     public $hasMany = [

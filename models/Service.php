@@ -60,12 +60,12 @@ class Service extends Model
      * @var array Relations
      */
     public $belongsTo = [
-        'invoice'       => Invoice::class,
-        'invoice_item'  => InvoiceItem::class,
-        'membership'    => Membership::class,
-        'plan'          => Plan::class,
-        'status'        => Status::class,
-        'user'          => User::class,
+        'first_invoice'      => Invoice::class,
+        'first_invoice_item' => InvoiceItem::class,
+        'membership'         => Membership::class,
+        'plan'               => Plan::class,
+        'status'             => Status::class,
+        'user'               => User::class,
     ];
 
     public $hasMany = [

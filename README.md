@@ -9,6 +9,9 @@ This plugin requires the following plugins:
 - [RainLab.User](http://octobercms.com/plugin/rainlab-user)
 - [RainLab.Location](http://octobercms.com/plugin/rainlab-location)
 
+These payment gateways are supported to use payment profiles:
+
+- Stripe
 
 Developer notes:
 

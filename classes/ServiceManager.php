@@ -77,8 +77,8 @@ class ServiceManager
             $service->grace_days = $plan->getGracePeriod();
         }
 
-        $service->invoice = $invoice;
-        $service->invoice_item = $this->invoiceManager->raiseServiceInvoiceItem($invoice, $service);
+        $service->first_invoice = $invoice;
+        $service->first_invoice_item = $this->invoiceManager->raiseServiceInvoiceItem($invoice, $service);
         $service->name = $plan->name;
         $service->price = $plan->price;
         $service->setup_price = $plan->setup_price;

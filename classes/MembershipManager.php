@@ -54,8 +54,7 @@ class MembershipManager
         }
 
         $service = ServiceModel::createForMembership($membership, $plan);
-
-        $invoice = $service->invoice;
+        $invoice = $service->first_invoice;
 
         if ($plan->hasMembershipPrice()) {
             $this->invoiceManager->raiseMembershipFee(
@@ -66,9 +65,9 @@ class MembershipManager
         }
 
         $invoice->updateInvoiceStatus(InvoiceStatusModel::STATUS_APPROVED);
-
         $invoice->touchTotals();
 
+        $membership->first_service = $service;
         $membership->save();
     }
 

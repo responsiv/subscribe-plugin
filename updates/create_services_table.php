@@ -46,8 +46,8 @@ class CreateServicesTable extends Migration
             $table->integer('plan_id')->unsigned()->nullable()->index();
             $table->integer('status_id')->unsigned()->nullable()->index();
             $table->integer('membership_id')->unsigned()->nullable()->index();
-            $table->integer('invoice_id')->unsigned()->nullable()->index();
-            $table->integer('invoice_item_id')->unsigned()->nullable()->index();
+            $table->integer('first_invoice_id')->unsigned()->nullable()->index();
+            $table->integer('first_invoice_item_id')->unsigned()->nullable()->index();
 
             $table->timestamps();
         });
