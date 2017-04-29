@@ -37,7 +37,7 @@ class TrialPeriodTest extends PluginTestCase
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
         $this->assertFalse(Setting::get('is_trial_inclusive'));
-        $this->assertEquals(InvoiceStatus::STATUS_APPROVED, $invoice->status->code);
+        $this->assertEquals(InvoiceStatus::STATUS_DRAFT, $invoice->status->code);
         $this->assertEquals(Status::STATUS_TRIAL, $service->status->code);
         $this->assertEquals(Carbon::now(), $service->current_period_start, '', 5);
         $this->assertEquals(Carbon::now()->addDays(7), $service->current_period_end, '', 5);
@@ -77,7 +77,7 @@ class TrialPeriodTest extends PluginTestCase
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
         $this->assertTrue(Setting::get('is_trial_inclusive'));
-        $this->assertEquals(InvoiceStatus::STATUS_APPROVED, $invoice->status->code);
+        $this->assertEquals(InvoiceStatus::STATUS_DRAFT, $invoice->status->code);
         $this->assertEquals(Status::STATUS_TRIAL, $service->status->code);
         $this->assertEquals(Carbon::now(), $service->current_period_start, '', 5);
         $this->assertEquals(Carbon::now()->addDays(7), $service->current_period_end, '', 5);
@@ -117,7 +117,7 @@ class TrialPeriodTest extends PluginTestCase
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership();
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
-        $this->assertEquals(InvoiceStatus::STATUS_APPROVED, $invoice->status->code);
+        $this->assertEquals(InvoiceStatus::STATUS_DRAFT, $invoice->status->code);
         $this->assertEquals(Status::STATUS_TRIAL, $service->status->code);
         $this->assertEquals(1, $service->is_active);
 

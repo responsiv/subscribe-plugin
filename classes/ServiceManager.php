@@ -55,6 +55,7 @@ class ServiceManager
 
         if (!$invoice) {
             $invoice = $this->invoiceManager->raiseServiceInvoice($service);
+            $invoice->items()->delete();
         }
 
         if ($plan->hasSetupPrice()) {
@@ -77,12 +78,12 @@ class ServiceManager
             $service->grace_days = $plan->getGracePeriod();
         }
 
-        $service->first_invoice = $invoice;
-        $service->first_invoice_item = $this->invoiceManager->raiseServiceInvoiceItem($invoice, $service);
         $service->name = $plan->name;
         $service->price = $plan->price;
         $service->setup_price = $plan->setup_price;
         $service->renewal_period = $plan->renewal_period;
+        $service->first_invoice = $invoice;
+        $service->first_invoice_item = $this->invoiceManager->raiseServiceInvoiceItem($invoice, $service);
 
         /*
          * Trial period
@@ -91,7 +92,7 @@ class ServiceManager
             $this->startTrialPeriod($service);
         }
         else {
-            $service->status = StatusModel::getStatusNew();
+            $service->status = StatusModel::getFromCode(StatusModel::STATUS_NEW);
             $service->save();
         }
     }
@@ -118,7 +119,7 @@ class ServiceManager
             $service->delay_activated_at = $currentBillingDate;
             $service->is_active = false;
 
-            $status = StatusModel::getStatusPending();
+            $status = StatusModel::getFromCode(StatusModel::STATUS_PENDING);
             StatusLogModel::createRecord($status->id, $service, $comment);
 
             Event::fire('responsiv.subscribe.serviceActivatedLater', $service);
@@ -143,7 +144,7 @@ class ServiceManager
         $service->is_active = true;
         $service->count_renewal = 1;
 
-        $status = StatusModel::getStatusActive();
+        $status = StatusModel::getFromCode(StatusModel::STATUS_ACTIVE);
         StatusLogModel::createRecord($status->id, $service, $comment);
 
         Event::fire('responsiv.subscribe.serviceActivated', $service);
@@ -163,7 +164,7 @@ class ServiceManager
         /*
          * Status log
          */
-        $status = StatusModel::getStatusTrial();
+        $status = StatusModel::getFromCode(StatusModel::STATUS_TRIAL);
         StatusLogModel::createRecord($status->id, $service, $comment);
 
         /*
@@ -182,7 +183,7 @@ class ServiceManager
      */
     public function startGracePeriod(ServiceModel $service, $comment = null)
     {
-        $status = StatusModel::getStatusGrace();
+        $status = StatusModel::getFromCode(StatusModel::STATUS_GRACE);
         StatusLogModel::createRecord($status->id, $service, $comment);
 
         $graceStart = clone $service->service_period_end;
@@ -229,7 +230,7 @@ class ServiceManager
          * Renewal is within the active period
          */
         if ($endDate > $now) {
-            $status = StatusModel::getStatusActive();
+            $status = StatusModel::getFromCode(StatusModel::STATUS_ACTIVE);
             StatusLogModel::createRecord($status->id, $service, $comment);
         }
 
@@ -383,7 +384,7 @@ class ServiceManager
      */
     public function pastDueService(ServiceModel $service, $comment = null)
     {
-        $status = StatusModel::getStatusPastDue();
+        $status = StatusModel::getFromCode(StatusModel::STATUS_PASTDUE);
         StatusLogModel::createRecord($status->id, $service, $comment);
 
         $service->cancelled_at = $this->now;
@@ -422,7 +423,7 @@ class ServiceManager
          * Not a future cancellation, cancel it now
          */
         if (!$isFuture) {
-            $status = StatusModel::getStatusCancelled();
+            $status = StatusModel::getFromCode(StatusModel::STATUS_CANCELLED);
             StatusLogModel::createRecord($status->id, $service, $comment);
 
             $service->cancelled_at = $this->now;
@@ -465,7 +466,7 @@ class ServiceManager
      */
     public function completeService(ServiceModel $service, $comment = null)
     {
-        $status = StatusModel::getStatusComplete();
+        $status = StatusModel::getFromCode(StatusModel::STATUS_COMPLETE);
         StatusLogModel::createRecord($status->id, $service, $comment);
 
         /*

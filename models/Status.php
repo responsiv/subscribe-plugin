@@ -33,51 +33,10 @@ class Status extends Model
      */
     protected $fillable = [];
 
-    //
-    // Status helpers
-    //
-
-    public static function getStatusNew()
-    {
-        return static::getByCode(static::STATUS_NEW);
-    }
-
-    public static function getStatusGrace()
-    {
-        return static::getByCode(static::STATUS_GRACE);
-    }
-
-    public static function getStatusTrial()
-    {
-        return static::getByCode(static::STATUS_TRIAL);
-    }
-
-    public static function getStatusActive()
-    {
-        return static::getByCode(static::STATUS_ACTIVE);
-    }
-
-    public static function getStatusComplete()
-    {
-        return static::getByCode(static::STATUS_COMPLETE);
-    }
-
-    public static function getStatusCancelled()
-    {
-        return static::getByCode(static::STATUS_CANCELLED);
-    }
-
-    public static function getStatusPastDue()
-    {
-        return static::getByCode(static::STATUS_PASTDUE);
-    }
-
-    public static function getStatusPending()
-    {
-        return static::getByCode(static::STATUS_PENDING);
-    }
-
-    public static function getByCode($code)
+    /**
+     * Returns a code, cached.
+     */
+    public static function getFromCode($code)
     {
         if (array_key_exists($code, static::$codeCache)) {
             return static::$codeCache[$code];
@@ -87,5 +46,4 @@ class Status extends Model
 
         return static::$codeCache[$code] = $status;
     }
-
 }

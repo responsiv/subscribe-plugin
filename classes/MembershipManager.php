@@ -64,7 +64,7 @@ class MembershipManager
             );
         }
 
-        $invoice->updateInvoiceStatus(InvoiceStatusModel::STATUS_APPROVED);
+        $invoice->updateInvoiceStatus(InvoiceStatusModel::STATUS_DRAFT);
         $invoice->touchTotals();
 
         $membership->first_service = $service;

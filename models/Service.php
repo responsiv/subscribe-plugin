@@ -83,15 +83,16 @@ class Service extends Model
 
     public static function createForMembership(Membership $membership, Plan $plan)
     {
-        $service = static::firstOrCreate([
-            'plan_id' => $plan->id,
+        $service = static::updateOrCreate([
             'membership_id' => $membership->id,
             'user_id' => $membership->user_id,
-            'is_throwaway' => $membership->is_throwaway,
+            'is_throwaway' => 1,
+        ], [
+            'plan_id' => $plan->id
         ]);
 
-        $service->setRelation('user', $membership->user);
         $service->setRelation('plan', $plan);
+        $service->setRelation('user', $membership->user);
         $service->setRelation('membership', $membership);
 
         ServiceManager::instance()->initService($service, [
@@ -232,7 +233,7 @@ class Service extends Model
     {
         $schedules = [];
 
-        $graceStatus = Status::getStatusGrace();
+        $graceStatus = Status::getFromCode(Status::STATUS_GRACE);
 
         $currentStart = $this->current_period_start;
 

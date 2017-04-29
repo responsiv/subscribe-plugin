@@ -67,22 +67,24 @@ trait WorkflowHelper
         return [$user, $plan, $membership, $service, $invoice];
     }
 
-    protected function generatePaidMembership($plan = null)
+    protected function generatePaidMembership($plan = null, $user = null)
     {
-        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership($plan);
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership($plan, $user);
 
         $invoice->submitManualPayment('Testing');
 
         return $this->reloadMembership($payload);
     }
 
-    protected function generateMembership($plan = null)
+    protected function generateMembership($plan = null, $user = null)
     {
-        $user = AuthManager::instance()->register([
-            'email' => 'user1@example.com',
-            'password_confirmation' => 'Password1',
-            'password' => 'Password1'
-        ]);
+        if ($user === null) {
+            $user = AuthManager::instance()->register([
+                'email' => 'user1@example.com',
+                'password_confirmation' => 'Password1',
+                'password' => 'Password1'
+            ]);
+        }
 
         if ($plan === null) {
             $plan = method_exists($this, 'setUpPlan')

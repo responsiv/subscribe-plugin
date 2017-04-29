@@ -94,6 +94,11 @@ class SubscriptionEngine
     {
         $statusCode = $service->status ? $service->status->code : null;
 
+        // Never allow a paid service to be thrown away
+        if ($service->is_throwaway) {
+            $service->is_throwaway = false;
+            $service->save();
+        }
 
         // Include trial as part of the first period
         if ($statusCode == StatusModel::STATUS_TRIAL) {

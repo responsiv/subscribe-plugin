@@ -25,7 +25,7 @@ class GracePeriodTest extends PluginTestCase
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership();
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
-        $this->assertEquals(InvoiceStatus::STATUS_APPROVED, $invoice->status->code);
+        $this->assertEquals(InvoiceStatus::STATUS_DRAFT, $invoice->status->code);
         $this->assertEquals(Status::STATUS_NEW, $service->status->code);
 
         // Pay the first invoice, activate membership
@@ -74,7 +74,7 @@ class GracePeriodTest extends PluginTestCase
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership();
         $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
 
-        $this->assertEquals(InvoiceStatus::STATUS_APPROVED, $invoice->status->code);
+        $this->assertEquals(InvoiceStatus::STATUS_DRAFT, $invoice->status->code);
         $this->assertEquals(Status::STATUS_NEW, $service->status->code);
 
         // Pay the first invoice, activate membership
