@@ -44,6 +44,11 @@ class CreateMembershipTest extends PluginTestCase
         $this->plan3 = $plan;
     }
 
+    /**
+     * When a user is selecting a plan, they can potentially create disposible models,
+     * this test ensures these "throwaway" models are reused during the selection
+     * process. Then also locked in once the payment is received.
+     */
     public function testWorkflow_PrepareMembership()
     {
         $this->setUpPlans();

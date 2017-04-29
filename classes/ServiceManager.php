@@ -119,8 +119,7 @@ class ServiceManager
             $service->delay_activated_at = $currentBillingDate;
             $service->is_active = false;
 
-            $status = StatusModel::getFromCode(StatusModel::STATUS_PENDING);
-            StatusLogModel::createRecord($status->id, $service, $comment);
+            StatusLogModel::createRecord(StatusModel::STATUS_PENDING, $service, $comment);
 
             Event::fire('responsiv.subscribe.serviceActivatedLater', $service);
 
@@ -144,8 +143,7 @@ class ServiceManager
         $service->is_active = true;
         $service->count_renewal = 1;
 
-        $status = StatusModel::getFromCode(StatusModel::STATUS_ACTIVE);
-        StatusLogModel::createRecord($status->id, $service, $comment);
+        StatusLogModel::createRecord(StatusModel::STATUS_ACTIVE, $service, $comment);
 
         Event::fire('responsiv.subscribe.serviceActivated', $service);
 
@@ -164,8 +162,7 @@ class ServiceManager
         /*
          * Status log
          */
-        $status = StatusModel::getFromCode(StatusModel::STATUS_TRIAL);
-        StatusLogModel::createRecord($status->id, $service, $comment);
+        StatusLogModel::createRecord(StatusModel::STATUS_TRIAL, $service, $comment);
 
         /*
          * Current start and end times
@@ -183,8 +180,7 @@ class ServiceManager
      */
     public function startGracePeriod(ServiceModel $service, $comment = null)
     {
-        $status = StatusModel::getFromCode(StatusModel::STATUS_GRACE);
-        StatusLogModel::createRecord($status->id, $service, $comment);
+        StatusLogModel::createRecord(StatusModel::STATUS_GRACE, $service, $comment);
 
         $graceStart = clone $service->service_period_end;
         $graceEnd = $graceStart->addDays($service->grace_days);
@@ -230,8 +226,7 @@ class ServiceManager
          * Renewal is within the active period
          */
         if ($endDate > $now) {
-            $status = StatusModel::getFromCode(StatusModel::STATUS_ACTIVE);
-            StatusLogModel::createRecord($status->id, $service, $comment);
+            StatusLogModel::createRecord(StatusModel::STATUS_ACTIVE, $service, $comment);
         }
 
         return true;
@@ -384,8 +379,7 @@ class ServiceManager
      */
     public function pastDueService(ServiceModel $service, $comment = null)
     {
-        $status = StatusModel::getFromCode(StatusModel::STATUS_PASTDUE);
-        StatusLogModel::createRecord($status->id, $service, $comment);
+        StatusLogModel::createRecord(StatusModel::STATUS_PASTDUE, $service, $comment);
 
         $service->cancelled_at = $this->now;
         $service->delay_cancelled_at = null;
@@ -423,8 +417,7 @@ class ServiceManager
          * Not a future cancellation, cancel it now
          */
         if (!$isFuture) {
-            $status = StatusModel::getFromCode(StatusModel::STATUS_CANCELLED);
-            StatusLogModel::createRecord($status->id, $service, $comment);
+            StatusLogModel::createRecord(StatusModel::STATUS_CANCELLED, $service, $comment);
 
             $service->cancelled_at = $this->now;
             $service->delay_cancelled_at = null;
@@ -466,8 +459,7 @@ class ServiceManager
      */
     public function completeService(ServiceModel $service, $comment = null)
     {
-        $status = StatusModel::getFromCode(StatusModel::STATUS_COMPLETE);
-        StatusLogModel::createRecord($status->id, $service, $comment);
+        StatusLogModel::createRecord(StatusModel::STATUS_COMPLETE, $service, $comment);
 
         /*
          * Completed date

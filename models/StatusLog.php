@@ -35,6 +35,10 @@ class StatusLog extends Model
 
     public static function createRecord($statusId, Service $service, $comment = null)
     {
+        if (is_string($statusId) && !is_numeric($statusId)) {
+            $statusId = Status::getFromCode($statusId);
+        }
+
         if ($statusId instanceof Model) {
             $statusId = $statusId->getKey();
         }
