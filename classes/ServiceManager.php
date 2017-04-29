@@ -92,7 +92,7 @@ class ServiceManager
             $this->startTrialPeriod($service);
         }
         else {
-            $service->status = StatusModel::getFromCode(StatusModel::STATUS_NEW);
+            $service->status = StatusModel::findByCode(StatusModel::STATUS_NEW);
             $service->save();
         }
     }

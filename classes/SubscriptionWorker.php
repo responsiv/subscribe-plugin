@@ -144,7 +144,7 @@ class SubscriptionWorker
     protected function processAutoBilling()
     {
         $loop = 10; // Process 10 at a time
-        $status = StatusModel::getFromCode(StatusModel::STATUS_ACTIVE);
+        $status = StatusModel::findByCode(StatusModel::STATUS_ACTIVE);
         $engine = SubscriptionEngine::instance();
 
         $count = 0;

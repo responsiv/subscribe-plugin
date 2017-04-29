@@ -233,7 +233,7 @@ class Service extends Model
     {
         $schedules = [];
 
-        $graceStatus = Status::getFromCode(Status::STATUS_GRACE);
+        $graceStatus = Status::findByCode(Status::STATUS_GRACE);
 
         $currentStart = $this->current_period_start;
 
