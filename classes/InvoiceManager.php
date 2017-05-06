@@ -50,7 +50,9 @@ class InvoiceManager
              * Pay from profile
              */
             try {
-                throw new Exception('Not implemented yet!');
+                if (!$paymentMethod = $invoice->payment_method) {
+                    throw new Exception('Invoice is missing a payment method!');
+                }
 
                 return true;
             }

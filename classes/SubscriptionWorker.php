@@ -180,5 +180,4 @@ class SubscriptionWorker
         $this->logMessage = $message;
         $this->isReady = false;
     }
-
 }
