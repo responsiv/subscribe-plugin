@@ -64,6 +64,10 @@ class MembershipManager
             );
         }
 
+        if ($membership->isTrialActive()) {
+            $invoice->due_at = $membership->trial_period_end;
+        }
+
         $invoice->updateInvoiceStatus(InvoiceStatusModel::STATUS_DRAFT);
         $invoice->touchTotals();
 
