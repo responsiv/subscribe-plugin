@@ -3,6 +3,7 @@
 use Event;
 use Backend;
 use Responsiv\Subscribe\Classes\SubscriptionEngine;
+use RainLab\User\Models\User as UserModel;
 use System\Classes\PluginBase;
 
 /**
@@ -50,6 +51,7 @@ class Plugin extends PluginBase
      */
     public function boot()
     {
+        $this->extendUserModel();
         $this->extendPayNavigation();
     }
 
@@ -132,11 +134,21 @@ class Plugin extends PluginBase
     }
 
     /**
-     * Register events related to this plugin
+     * Register events related to this plugin, needs to be public for unit testing.
      */
     public function registerSubscriptionEvents()
     {
         $manager = SubscriptionEngine::instance();
         Event::listen('responsiv.pay.invoicePaid', [$manager, 'invoiceAfterPayment']);
+    }
+
+    /**
+     * Extends the User model provided by the RainLab.User plugin.
+     */
+    protected function extendUserModel()
+    {
+        UserModel::extend(function($model) {
+            $model->implement[] = 'Responsiv.Subscribe.Behaviors.SubscriberModel';
+        });
     }
 }
