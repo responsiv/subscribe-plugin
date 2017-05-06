@@ -1,11 +1,14 @@
 <?php namespace Responsiv\Subscribe\Components;
 
+use Flash;
 use Redirect;
 use Cms\Classes\Page;
 use Cms\Classes\ComponentBase;
 use Responsiv\Pay\Models\Invoice as InvoiceModel;
 use Responsiv\Pay\Models\PaymentMethod as TypeModel;
+use Responsiv\Pay\Models\UserProfile as UserProfileModel;
 use Responsiv\Subscribe\Classes\InvoiceManager;
+use Illuminate\Http\RedirectResponse;
 use ApplicationException;
 
 /**
@@ -45,6 +48,11 @@ class Payment extends ComponentBase
         $this->page['invoice'] = $invoice = $this->invoice();
         $this->page['paymentMethods'] = $this->paymentMethods();
         $this->page['paymentMethod'] = $this->paymentMethod();
+        $this->page['hasProfile'] = $hasProfile = $this->hasProfile();
+
+        if ($hasProfile) {
+            $this->checkFirstPayment($invoice);
+        }
     }
 
     public function invoice()
@@ -80,6 +88,28 @@ class Payment extends ComponentBase
         return $methods;
     }
 
+    public function hasProfile()
+    {
+        if (!$invoice = $this->invoice()) {
+            return false;
+        }
+
+        if (!$invoice->user) {
+            return false;
+        }
+
+        return UserProfileModel::userHasProfile($invoice->user);
+    }
+
+    protected function checkFirstPayment($invoice)
+    {
+        if ($invoice->isPaymentProcessed()) {
+            return;
+        }
+
+        InvoiceManager::instance()->attemptFirstPayment($invoice);
+    }
+
     //
     // AJAX
     //
@@ -105,7 +135,7 @@ class Payment extends ComponentBase
         $this->page['paymentMethod'] = $method;
     }
 
-    public function onUpdateProfile()
+    public function onUpdatePaymentProfile()
     {
         if (!$invoice = $this->invoice()) {
             throw new ApplicationException('Invoice not found!');
@@ -119,19 +149,20 @@ class Payment extends ComponentBase
             throw new ApplicationException('Payment method not found.');
         }
 
-        $paymentMethod->updateUserProfile($user, post());
+        $result = $paymentMethod->updateUserProfile($user, post());
 
-        // Pay the invoice (if it is due today)
-        if (!InvoiceManager::instance()->attemptAutomaticPayment($invoice)) {
-            throw new ApplicationException('Unable to pay from profile');
+        if (!post('no_flash')) {
+            Flash::success(post('message', 'The payment profile has been successfully updated.'));
         }
 
-        // if (!post('no_flash')) {
-        //     Flash::success(post('message', 'The payment profile has been successfully updated.'));
-        // }
+        /*
+         * Custom response
+         */
+        if ($result instanceof RedirectResponse) {
+            return $result;
+        }
 
-        // Redirect to post('redirect')
-        // return Redirect::to($this->returnPageUrl());
+        return Redirect::refresh();
     }
 
     /**

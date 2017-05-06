@@ -2,10 +2,12 @@
 
 use Db;
 use Carbon\Carbon;
+use Responsiv\Subscribe\Models\Plan as PlanModel;
 use Responsiv\Subscribe\Models\Status as StatusModel;
-use Responsiv\Subscribe\Models\StatusLog as StatusLogModel;
 use Responsiv\Subscribe\Models\Service as ServiceModel;
 use Responsiv\Subscribe\Models\Setting as SettingModel;
+use Responsiv\Subscribe\Models\StatusLog as StatusLogModel;
+use Responsiv\Subscribe\Models\Membership as MembershipModel;
 use Responsiv\Pay\Models\Invoice as InvoiceModel;
 use Responsiv\Pay\Models\InvoiceStatus as InvoiceStatusModel;
 use Exception;
@@ -153,5 +155,26 @@ class SubscriptionEngine
                 $this->serviceManager->pastDueService($service, 'Automatic payment failed');
             }
         }
+    }
+
+    //
+    // Plan hopping
+    //
+
+    public function switchPlan(MembershipModel $membership, PlanModel $plan)
+    {
+        /*
+         * Found active service, cancel it
+         */
+        if ($activeService = $membership->getActivePlan()) {
+            $this->serviceManager->cancelServiceNow($activeService);
+        }
+
+        /*
+         * Subscribe to new service.
+         */
+        $service = ServiceModel::createForMembership($membership, $plan);
+
+        return $service;
     }
 }

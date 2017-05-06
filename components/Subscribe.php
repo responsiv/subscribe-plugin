@@ -12,6 +12,7 @@ use Responsiv\Pay\Models\InvoiceItem as InvoiceItemModel;
 use Responsiv\Pay\Models\InvoiceStatus as InvoiceStatusModel;
 use Responsiv\Subscribe\Models\Plan as PlanModel;
 use Responsiv\Subscribe\Models\Membership as MembershipModel;
+use Responsiv\Subscribe\Classes\SubscriptionEngine;
 use Responsiv\Pay\Models\PaymentMethod;
 use ApplicationException;
 use ValidationException;
@@ -19,7 +20,6 @@ use Exception;
 
 class Subscribe extends ComponentBase
 {
-
     public function componentDetails()
     {
         return [
@@ -45,6 +45,11 @@ class Subscribe extends ComponentBase
         return Page::sortBy('baseFileName')->lists('baseFileName', 'baseFileName');
     }
 
+    public function paymentPage()
+    {
+        return $this->property('paymentPage');
+    }
+
     //
     // Registration (for guests)
     //
@@ -65,7 +70,7 @@ class Subscribe extends ComponentBase
             Db::commit();
 
             return Redirect::to($this->pageUrl(
-                $this->property('paymentPage'),
+                $this->paymentPage(),
                 ['hash' => $invoice->hash]
             ));
         }
@@ -138,7 +143,7 @@ class Subscribe extends ComponentBase
             Db::commit();
 
             return Redirect::to($this->pageUrl(
-                $this->property('paymentPage'),
+                $this->paymentPage(),
                 ['hash' => $invoice->hash]
             ));
         }
@@ -146,6 +151,50 @@ class Subscribe extends ComponentBase
             Db::rollBack();
             throw $ex;
         }
+    }
+
+    public function onLoadUpdateConfirmForm()
+    {
+        $this->page['newPlan'] = PlanModel::find(post('selected_plan'));
+    }
+
+    public function onUpdateConfirm()
+    {
+        if (!$user = $this->user()) {
+            throw new ApplicationException('Please log in to subscribe.');
+        }
+
+        if (!$membership = $user->membership) {
+            throw new ApplicationException('Cannot update a user when they have no membership!');
+        }
+
+        if (!$plan = PlanModel::find(post('selected_plan'))) {
+            throw new ApplicationException('Unable to locate the selected plan!');
+        }
+
+        try {
+            Db::beginTransaction();
+
+            $service = SubscriptionEngine::instance()->switchPlan($membership, $plan);
+
+            if (!$invoice = $service->first_invoice) {
+                throw new ApplicationException('New service is without an invoice!');
+            }
+
+            $invoice->return_page = $this->paymentPage();
+            $invoice->save();
+
+            Db::commit();
+        }
+        catch (Exception $ex) {
+            Db::rollBack();
+            throw $ex;
+        }
+
+        return Redirect::to($this->pageUrl(
+            $this->paymentPage(),
+            ['hash' => $invoice->hash]
+        ));
     }
 
     protected function validateSubscribeFields()
@@ -221,8 +270,7 @@ class Subscribe extends ComponentBase
         $invoice->zip = post('zip');
         $invoice->country_id = post('country_id');
         $invoice->state_id = post('state_id');
-        $invoice->due_at = $invoice->freshTimestamp();
-        $invoice->return_page = $this->property('paymentPage');
+        $invoice->return_page = $this->paymentPage();
 
         $invoice->save();
         $invoice->touchTotals();

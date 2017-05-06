@@ -113,6 +113,11 @@ class Membership extends Model
         return $this->trial_period_end > MembershipManager::instance()->now;
     }
 
+    public function getActivePlan()
+    {
+        return $this->services()->applyActive()->orderBy('activated_at', 'desc')->first();
+    }
+
     //
     // Scopes
     //

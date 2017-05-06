@@ -9,6 +9,7 @@ use Responsiv\Subscribe\Models\Setting as SettingModel;
 use Responsiv\Pay\Models\Invoice as InvoiceModel;
 use Responsiv\Pay\Models\InvoiceItem as InvoiceItemModel;
 use Responsiv\Pay\Models\InvoiceStatus as InvoiceStatusModel;
+use ApplicationException;
 use Exception;
 
 /**
@@ -35,6 +36,12 @@ class InvoiceManager
     // Invoicing
     //
 
+    public function attemptFirstPayment(InvoiceModel $invoice)
+    {
+        // Check trial date
+        $this->attemptAutomaticPayment($invoice);
+    }
+
     public function attemptAutomaticPayment(InvoiceModel $invoice)
     {
         /*
@@ -50,9 +57,17 @@ class InvoiceManager
              * Pay from profile
              */
             try {
-                if (!$paymentMethod = $invoice->payment_method) {
-                    throw new Exception('Invoice is missing a payment method!');
+                $attempted = [];
+
+                if (!$invoice->user) {
+                    throw new ApplicationException('Invoice is missing a user!');
                 }
+
+                if (!$paymentMethod = $invoice->payment_method) {
+                    throw new ApplicationException('Invoice is missing a payment method!');
+                }
+
+                $paymentMethod->payFromProfile($invoice);
 
                 return true;
             }
@@ -99,6 +114,7 @@ class InvoiceManager
         $invoice = $invoice->first() ?: InvoiceModel::makeForUser($user);
         $invoice->is_throwaway = $service->is_throwaway;
         $invoice->related = $service;
+        $invoice->due_at = $service->freshTimestamp();
         $invoice->save();
 
         return $invoice;
