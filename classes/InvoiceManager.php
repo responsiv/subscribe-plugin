@@ -114,7 +114,7 @@ class InvoiceManager
         $invoice = $invoice->first() ?: InvoiceModel::makeForUser($user);
         $invoice->is_throwaway = $service->is_throwaway;
         $invoice->related = $service;
-        $invoice->due_at = $service->freshTimestamp();
+        $invoice->due_at = $service->service_period_end ?: $service->freshTimestamp();
         $invoice->save();
 
         return $invoice;

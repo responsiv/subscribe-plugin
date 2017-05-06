@@ -65,8 +65,11 @@ class AdvanceInvoiceTest extends PluginTestCase
         $this->assertEquals(Carbon::now()->addMonth(), $service->service_period_end, '', 5);
         $this->assertTrue($service->hasUnpaidInvoices());
 
-        // Pay the second invoice early
+        // Second invoice due date should be the day service expires
         $invoice = $this->generateInvoice($service);
+        $this->assertEquals($service->service_period_end, $invoice->due_at, '', 5);
+
+        // Pay the second invoice early
         $invoice->submitManualPayment('Testing');
 
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);

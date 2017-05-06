@@ -64,6 +64,7 @@ class CreateMembershipTest extends PluginTestCase
         $this->assertEquals(1, $invoice->items()->count());
         $this->assertEquals(1, $service->is_throwaway);
         $this->assertEquals(1, $invoice->is_throwaway);
+        $this->assertEquals($service->freshTimestamp(), $invoice->due_at, '', 5);
 
         // User selected second plan
         list($user, $plan, $membership, $service, $invoice) = $this->generateMembership($this->plan2, $user);
@@ -72,6 +73,7 @@ class CreateMembershipTest extends PluginTestCase
         $this->assertEquals(1, Invoice::applyUser($user)->count());
         $this->assertEquals(1, $invoice->items()->count());
         $this->assertEquals(20, $invoice->total);
+        $this->assertEquals($service->freshTimestamp(), $invoice->due_at, '', 5);
 
         // User selected yet another plan
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->generateMembership($this->plan3, $user);
