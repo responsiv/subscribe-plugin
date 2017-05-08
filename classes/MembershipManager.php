@@ -88,4 +88,41 @@ class MembershipManager
         $membership->trial_period_start = $current;
         $membership->trial_period_end = $current->addDays($trialDays);
     }
+
+    //
+    // Plan hopping
+    //
+
+    public function switchPlan(MembershipModel $membership, PlanModel $plan, $options = [])
+    {
+        extract(array_merge([
+            'atTermEnd' => true,
+        ], $options));
+
+        /*
+         * Determine delay based on old service, if found
+         */
+        $delay = null;
+
+        if (
+            $atTermEnd &&
+            ($oldService = $membership->getActivePlan())
+        ) {
+            $delay = $oldService->service_period_end;
+        }
+
+        /*
+         * Raise new service
+         */
+        $service = ServiceModel::createForMembership($membership, $plan, [
+            'delay' => $delay
+        ]);
+
+        return $service;
+    }
+
+    public function switchPlanNow(MembershipModel $membership, PlanModel $plan)
+    {
+        return $this->switchPlan($membership, $plan, ['atTermEnd' => false]);
+    }
 }

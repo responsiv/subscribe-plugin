@@ -81,14 +81,19 @@ class Service extends Model
         'related' => []
     ];
 
-    public static function createForMembership(Membership $membership, Plan $plan)
+    public static function createForMembership(Membership $membership, Plan $plan, $options = [])
     {
+        extract(array_merge([
+            'delay' => null,
+        ], $options));
+
         $service = static::updateOrCreate([
             'membership_id' => $membership->id,
             'user_id' => $membership->user_id,
             'is_throwaway' => 1,
         ], [
-            'plan_id' => $plan->id
+            'plan_id' => $plan->id,
+            'delay_activated_at' => $delay,
         ]);
 
         $service->setRelation('plan', $plan);

@@ -156,25 +156,4 @@ class SubscriptionEngine
             }
         }
     }
-
-    //
-    // Plan hopping
-    //
-
-    public function switchPlan(MembershipModel $membership, PlanModel $plan)
-    {
-        /*
-         * Found active service, cancel it
-         */
-        if ($activeService = $membership->getActivePlan()) {
-            $this->serviceManager->cancelServiceNow($activeService);
-        }
-
-        /*
-         * Subscribe to new service.
-         */
-        $service = ServiceModel::createForMembership($membership, $plan);
-
-        return $service;
-    }
 }

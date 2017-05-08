@@ -62,8 +62,12 @@ class Membership extends Model
     // Creation
     //
 
-    public static function createForUser(User $user, Plan $plan, $isGuest = false)
+    public static function createForUser(User $user, Plan $plan, $options = [])
     {
+        extract(array_merge([
+            'isGuest' => false,
+        ], $options));
+
         $membership = static::firstOrCreate([
             'user_id' => $user->id,
             'is_throwaway' => $isGuest ? 1 : 0

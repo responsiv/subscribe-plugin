@@ -129,6 +129,8 @@ class ServiceManager
 
     public function activateService(ServiceModel $service, $comment = null)
     {
+        $this->voidOtherActiveService($service, 'Voided to replace service ID: ' . $service->id);
+
         $plan = $service->plan;
         $now = clone $this->now;
         $activateAt = $service->delay_activated_at ?: $now;
@@ -452,6 +454,24 @@ class ServiceManager
     public function cancelServiceNow(ServiceModel $service, $comment = null)
     {
         $this->cancelService($service, $comment, ['atTermEnd' => false]);
+    }
+
+    /**
+     * Finds a membership from a new service and cancels an active sibling.
+     */
+    public function voidOtherActiveService(ServiceModel $service, $comment = null)
+    {
+        if (!$membership = $service->membership) {
+            return;
+        }
+
+        $activeService = $membership->getActivePlan();
+
+        if (!$activeService || $activeService->id === $service->id) {
+            return;
+        }
+
+        $this->cancelServiceNow($activeService, $comment);
     }
 
     /**
