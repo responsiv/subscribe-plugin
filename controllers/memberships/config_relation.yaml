@@ -9,3 +9,11 @@ services:
         list: $/responsiv/subscribe/models/service/columns.yaml
         recordUrl: responsiv/subscribe/services/preview/:id
         toolbarButtons: null
+
+notifications:
+    label: Notifications
+    readOnly: true
+    view:
+        list: $/responsiv/subscribe/models/notificationlog/columns.yaml
+        recordUrl: responsiv/subscribe/notificationlog/preview/:id
+        toolbarButtons: null

@@ -8,40 +8,40 @@ fields:
         label: User details
         type: section
 
-    full_name:
-        label: Full name
+    user[name]:
+        label: Name
 
-    email:
+    user[email]:
         label: Email
 
-    company:
+    user[company]:
         label: Company
 
-    phone:
+    user[phone]:
         label: Phone
 
     section_billing:
         label: Billing details
         type: section
 
-    payment_method:
-        label: Payment method
+    # payment_method:
+    #     label: Payment method
 
-    street_addr:
+    user[street_addr]:
         label: Street address
 
-    city:
+    user[city]:
         label: City
         span: auto
 
-    state:
+    user[state][name]:
         label: State
         span: auto
 
-    zip:
+    user[zip]:
         label: Zip / Postcode
         span: auto
 
-    country:
+    user[country][name]:
         label: Country
         span: auto

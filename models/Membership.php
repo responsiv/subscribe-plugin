@@ -56,6 +56,7 @@ class Membership extends Model
 
     public $hasMany = [
         'services' => [Service::class, 'delete' => true],
+        'notifications' => [NotificationLog::class, 'delete' => true],
     ];
 
     //

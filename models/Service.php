@@ -70,6 +70,7 @@ class Service extends Model
 
     public $hasMany = [
         'status_logs'   => StatusLog::class,
+        'notifications' => [NotificationLog::class, 'delete' => true],
     ];
 
     public $morphMany = [
