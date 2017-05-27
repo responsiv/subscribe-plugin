@@ -52,7 +52,6 @@ class Plugin extends PluginBase
     public function boot()
     {
         $this->extendUserModel();
-        $this->extendPayNavigation();
     }
 
     /**
@@ -97,29 +96,38 @@ class Plugin extends PluginBase
                 'icon'        => 'icon-exchange',
                 'class'       => 'Responsiv\Subscribe\Models\Setting',
                 'category'    => 'Pay',
-                'order'       => 500,
+                'order'       => 490,
             ],
         ];
     }
 
-    protected function extendPayNavigation()
+    public function registerNavigation()
     {
-        Event::listen('backend.menu.extendItems', function($manager) {
-            $manager->addSideMenuItems('Responsiv.Pay', 'pay', [
-                'memberships' => [
-                    'label'       => 'Memberships',
-                    'icon'        => 'icon-users',
-                    'url'         => Backend::url('responsiv/subscribe/memberships'),
-                    'permissions' => ['pay.*'],
-                ],
-                'plans' => [
-                    'label'       => 'Plans',
-                    'icon'        => 'icon-clipboard',
-                    'url'         => Backend::url('responsiv/subscribe/plans'),
-                    'permissions' => ['pay.*'],
+        return [
+            'subscribe' => [
+                'label'       => 'Subscribers',
+                'url'         => Backend::url('responsiv/subscribe/memberships'),
+                'icon'        => 'icon-newspaper-o',
+                'iconSvg'     => 'plugins/responsiv/subscribe/assets/images/subscribe-icon.svg',
+                'permissions' => ['subscribe.*'],
+                'order'       => 490,
+
+                'sideMenu' => [
+                    'memberships' => [
+                        'label'       => 'Memberships',
+                        'icon'        => 'icon-users',
+                        'url'         => Backend::url('responsiv/subscribe/memberships'),
+                        'permissions' => ['pay.*'],
+                    ],
+                    'plans' => [
+                        'label'       => 'Plans',
+                        'icon'        => 'icon-clipboard',
+                        'url'         => Backend::url('responsiv/subscribe/plans'),
+                        'permissions' => ['pay.*'],
+                    ]
                 ]
-            ]);
-        });
+            ]
+        ];
     }
 
     public function registerMailTemplates()

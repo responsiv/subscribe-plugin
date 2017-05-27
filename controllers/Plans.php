@@ -20,6 +20,6 @@ class Plans extends Controller
     {
         parent::__construct();
 
-        BackendMenu::setContext('Responsiv.Pay', 'pay', 'plans');
+        BackendMenu::setContext('Responsiv.Subscribe', 'subscribe', 'plans');
     }
 }

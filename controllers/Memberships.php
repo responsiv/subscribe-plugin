@@ -33,7 +33,7 @@ class Memberships extends Controller
     {
         parent::__construct();
 
-        BackendMenu::setContext('Responsiv.Pay', 'pay', 'memberships');
+        BackendMenu::setContext('Responsiv.Subscribe', 'subscribe', 'memberships');
     }
 
     public function index()
