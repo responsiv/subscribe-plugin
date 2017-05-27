@@ -17,3 +17,10 @@ notifications:
         list: $/responsiv/subscribe/models/notificationlog/columns.yaml
         recordUrl: responsiv/subscribe/notificationlog/preview/:id
         toolbarButtons: null
+
+status_logs:
+    label: Status Log
+    readOnly: true
+    view:
+        list: $/responsiv/subscribe/models/statuslog/columns.yaml
+        toolbarButtons: null

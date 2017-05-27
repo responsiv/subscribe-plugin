@@ -71,7 +71,7 @@ class MembershipManager
         $invoice->updateInvoiceStatus(InvoiceStatusModel::STATUS_DRAFT);
         $invoice->touchTotals();
 
-        $membership->first_service = $service;
+        $membership->active_service = $service;
         $membership->save();
     }
 

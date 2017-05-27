@@ -254,7 +254,7 @@ class Subscribe extends ComponentBase
             throw new ApplicationException('Membership is missing a user.');
         }
 
-        if (!$service = $membership->first_service) {
+        if (!$service = $membership->active_service) {
             throw new ApplicationException('Membership is missing a service.');
         }
 

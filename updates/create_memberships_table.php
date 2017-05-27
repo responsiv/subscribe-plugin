@@ -16,7 +16,7 @@ class CreateMembershipsTable extends Migration
             $table->boolean('is_trial_used')->default(false);
             $table->boolean('is_throwaway')->default(false);
             $table->integer('user_id')->unsigned()->nullable()->index();
-            $table->integer('first_service_id')->unsigned()->nullable()->index();
+            $table->integer('active_service_id')->unsigned()->nullable()->index();
             $table->dateTime('last_process_at')->nullable();
             $table->softDeletes();
             $table->timestamps();

@@ -3,11 +3,16 @@
 # ===================================
 
 columns:
+    service:
+        label: Service
+        relation: service
+        select: name
+        width: 250px
+
     status:
         label: Status
         relation: status
         select: name
-        searchable: true
         width: 100px
 
     created_at:

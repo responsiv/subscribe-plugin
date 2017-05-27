@@ -96,7 +96,7 @@ class Plugin extends PluginBase
                 'icon'        => 'icon-exchange',
                 'class'       => 'Responsiv\Subscribe\Models\Setting',
                 'category'    => 'Pay',
-                'order'       => 490,
+                'order'       => 510,
             ],
         ];
     }
@@ -110,7 +110,7 @@ class Plugin extends PluginBase
                 'icon'        => 'icon-newspaper-o',
                 'iconSvg'     => 'plugins/responsiv/subscribe/assets/images/subscribe-icon.svg',
                 'permissions' => ['subscribe.*'],
-                'order'       => 490,
+                'order'       => 510,
 
                 'sideMenu' => [
                     'memberships' => [

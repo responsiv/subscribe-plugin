@@ -23,6 +23,7 @@
         <ul class="nav nav-tabs">
             <li class="active"><a href="#membership">Membership</a></li>
             <li><a href="#notifications">Notifications</a></li>
+            <li><a href="#history">History</a></li>
         </ul>
         <div class="tab-content">
             <div class="tab-pane pane-inset active">
@@ -32,6 +33,9 @@
             </div>
             <div class="tab-pane pane-inset">
                 <?= $this->makePartial('tab_notifications') ?>
+            </div>
+            <div class="tab-pane pane-inset">
+                <?= $this->makePartial('tab_history') ?>
             </div>
         </div>
     </div>

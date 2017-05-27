@@ -51,11 +51,12 @@ class Membership extends Model
      */
     public $belongsTo = [
         'user' => User::class,
-        'first_service' => Service::class,
+        'active_service' => Service::class,
     ];
 
     public $hasMany = [
-        'services' => [Service::class, 'delete' => true],
+        'services'      => [Service::class, 'delete' => true],
+        'status_logs'   => StatusLog::class,
         'notifications' => [NotificationLog::class, 'delete' => true],
     ];
 

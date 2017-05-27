@@ -3,16 +3,13 @@
 # ===================================
 
 columns:
-    id:
-        label: ID
-        searchable: true
-        width: 100px
-
     status:
         label: Status
         relation: status
         select: name
         sortable: false
+        type: partial
+        path: $/responsiv/subscribe/controllers/services/_column_status.htm
 
     plan_name:
         label: Plan
@@ -20,37 +17,23 @@ columns:
         select: name
         sortable: false
 
-    invoice_id:
-        label: Invoice
-        relation: invoice
-        select: id
-        sortable: false
-        invisible: true
+    activated_at:
+        label: Activated On
+        type: date
 
     service_period_start:
-        label: Original Period Start
+        label: Period Start
         type: date
         invisible: true
 
     service_period_end:
-        label: Original Period End
+        label: Period End
         type: date
         invisible: true
 
-    current_period_start:
-        label: Current Period Start
-        type: date
-        invisible: true
-
-    current_period_end:
-        label: Current Period End
-        type: date
-        invisible: true
-
-    activated_at:
-        label: Activated On
-        type: date
-        invisible: true
+    price:
+        label: Price
+        type: currency
 
     delay_activated_at:
         label: Activate On

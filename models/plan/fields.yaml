@@ -79,8 +79,8 @@ tabs:
 
         renewal_period:
             tab: Product
-            label: Renewal period
-            comment: Number of renewal periods before the subscription ends. Leave the field empty for unlimited renewals.
+            label: Renewal cycles
+            comment: Number of renewal before the subscription ends. Leave the field empty for unlimited renewals.
             dependsOn: plan_type
             type: number
             span: left

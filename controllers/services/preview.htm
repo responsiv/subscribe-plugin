@@ -30,7 +30,6 @@
             <?php if ($showSchedule): ?>
                 <li><a href="#schedule">Schedule</a></li>
             <?php endif ?>
-            <li><a href="#history">History</a></li>
         </ul>
         <div class="tab-content">
             <div class="tab-pane pane-inset active">
@@ -43,9 +42,6 @@
                     <?= $this->makePartial('tab_schedule') ?>
                 </div>
             <?php endif ?>
-            <div class="tab-pane pane-inset">
-                <?= $this->makePartial('tab_history') ?>
-            </div>
         </div>
     </div>
 
