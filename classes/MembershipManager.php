@@ -106,7 +106,7 @@ class MembershipManager
 
         if (
             $atTermEnd &&
-            ($oldService = $membership->getActivePlan())
+            ($oldService = $membership->active_service)
         ) {
             $delay = $oldService->service_period_end;
         }

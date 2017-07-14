@@ -465,7 +465,7 @@ class ServiceManager
             return;
         }
 
-        $activeService = $membership->getActivePlan();
+        $activeService = $membership->active_service;
 
         if (!$activeService || $activeService->id === $service->id) {
             return;

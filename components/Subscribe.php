@@ -2,6 +2,7 @@
 
 use Db;
 use Auth;
+use Flash;
 use Redirect;
 use Validator;
 use Cms\Classes\Page;
@@ -12,7 +13,7 @@ use Responsiv\Pay\Models\InvoiceItem as InvoiceItemModel;
 use Responsiv\Pay\Models\InvoiceStatus as InvoiceStatusModel;
 use Responsiv\Subscribe\Models\Plan as PlanModel;
 use Responsiv\Subscribe\Models\Membership as MembershipModel;
-use Responsiv\Subscribe\Classes\SubscriptionEngine;
+use Responsiv\Subscribe\Classes\MembershipManager;
 use Responsiv\Pay\Models\PaymentMethod;
 use ApplicationException;
 use ValidationException;
@@ -126,7 +127,7 @@ class Subscribe extends ComponentBase
     public function onSubscribe()
     {
         if (!$user = $this->user()) {
-            throw new ApplicationException('Please log in to subscribe.');
+            throw new ApplicationException('Please log in first.');
         }
 
         $this->validateSubscribeFields();
@@ -155,18 +156,15 @@ class Subscribe extends ComponentBase
 
     public function onLoadUpdateConfirmForm()
     {
-        $this->page['newPlan'] = PlanModel::find(post('selected_plan'));
+        $membership = $this->membership(true);
+
+        $this->page['newPlan'] = $plan = PlanModel::find(post('selected_plan'));
+        $this->page['samePlan'] = (!$service = $membership->active_service) || $plan->id == $service->plan_id;
     }
 
     public function onUpdateConfirm()
     {
-        if (!$user = $this->user()) {
-            throw new ApplicationException('Please log in to subscribe.');
-        }
-
-        if (!$membership = $user->membership) {
-            throw new ApplicationException('Cannot update a user when they have no membership!');
-        }
+        $membership = $this->membership(true);
 
         if (!$plan = PlanModel::find(post('selected_plan'))) {
             throw new ApplicationException('Unable to locate the selected plan!');
@@ -175,7 +173,7 @@ class Subscribe extends ComponentBase
         try {
             Db::beginTransaction();
 
-            $service = SubscriptionEngine::instance()->switchPlan($membership, $plan);
+            $service = MembershipManager::instance()->switchPlanNow($membership, $plan);
 
             if (!$invoice = $service->first_invoice) {
                 throw new ApplicationException('New service is without an invoice!');
@@ -195,6 +193,28 @@ class Subscribe extends ComponentBase
             $this->paymentPage(),
             ['hash' => $invoice->hash]
         ));
+    }
+
+    public function onLoadCancelConfirmForm()
+    {
+        /*
+         * Does nothing
+         */
+    }
+
+    public function onCancelConfirm()
+    {
+        $membership = $this->membership(true);
+
+        if (!$service = $membership->active_service) {
+            throw new ApplicationException('Membership does not have an active service.');
+        }
+
+        $service->cancelService();
+
+        Flash::success('Service cancelled');
+
+        return Redirect::refresh();
     }
 
     protected function validateSubscribeFields()
@@ -290,5 +310,20 @@ class Subscribe extends ComponentBase
         }
 
         return $user;
+    }
+
+    public function membership($throw = false)
+    {
+        if (!$user = $this->user()) {
+            if ($throw) throw new ApplicationException('Please log in first.');
+            else return false;
+        }
+
+        if (!$membership = $user->membership) {
+            if ($throw) throw new ApplicationException('User has no membership.');
+            else return false;
+        }
+
+        return $membership;
     }
 }

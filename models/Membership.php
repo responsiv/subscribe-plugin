@@ -121,7 +121,9 @@ class Membership extends Model
 
     public function getActivePlan()
     {
-        return $this->services()->applyActive()->orderBy('activated_at', 'desc')->first();
+        return $this->active_service
+            ? $this->active_service->plan
+            : null;
     }
 
     //
