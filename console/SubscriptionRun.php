@@ -53,5 +53,4 @@ class SubscriptionRun extends Command
     {
         return [];
     }
-
 }
