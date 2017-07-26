@@ -133,11 +133,11 @@ class Plugin extends PluginBase
     public function registerMailTemplates()
     {
         return [
-            'responsiv.subscribe::mail.billing_report' => 'Sent to administrators when the system finishes processing the automated billing.',
-            'responsiv.subscribe::mail.invoice_report' => 'Sent to administrators when the system finishes generating membership orders.',
-            'responsiv.subscribe::mail.membership_thankyou' => 'Sent to customers on new membership subscription order.',
-            'responsiv.subscribe::mail.new_membership_internal' => 'Sent to the store team members when an membership changes its status.',
-            'responsiv.subscribe::mail.membership_status_update_internal' => 'Sent to the store team members on new membership.',
+            'responsiv.subscribe::mail.billing_report',
+            'responsiv.subscribe::mail.invoice_report',
+            'responsiv.subscribe::mail.membership_thankyou',
+            'responsiv.subscribe::mail.new_membership_internal',
+            'responsiv.subscribe::mail.membership_status_update_internal'
         ];
     }
 

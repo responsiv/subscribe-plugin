@@ -1,20 +1,20 @@
 subject = "Thank you for subscribing!"
+description = "Sent to customers on new membership subscription order."
 ==
-<p>Dear {{ customer_name }}!</p>
+Dear {{ customer_name }}!
 
-<p>Thank you for for subscribing. Your membership details:</p>
-<p>
-    ID: {{ membership_id }}<br />
-    Start Date: {{ membership_start }}<br />
-    Next Billing: {{ membership_end }}
-</p>
+Thank you for for subscribing. Your membership details:
 
-<p>Your order details:</p>
-<p>
-    Number: {{ invoice_id }}<br />
-    Date: {{ invoice_date }}<br />
-    Total: {{ invoice_total }}
-</p>
+- ID: {{ membership_id }}
+- Start Date: {{ membership_start }}
+- Next Billing: {{ membership_end }}
 
-<p>Order items:</p>
-<p>{{ membership_order_content }}</p>
+Your order details:
+
+Number: {{ invoice_id }}
+Date: {{ invoice_date }}
+Total: {{ invoice_total }}
+
+Order items:
+
+{{ membership_order_content }}
