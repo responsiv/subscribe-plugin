@@ -53,6 +53,7 @@ class ChangePlanTest extends PluginTestCase
 
         $this->assertEquals(Status::STATUS_ACTIVE, $service->status->code);
         $this->assertEquals(1, $service->isActive());
+        $this->assertEquals($membership->active_service_id, $service->id);
 
         /*
          * Emulate in the wild
@@ -87,6 +88,11 @@ class ChangePlanTest extends PluginTestCase
 
         list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
         $newService = Service::find($newService->id);
+
+        /*
+         * Membership active
+         */
+        $this->assertEquals($membership->active_service_id, $newService->id);
 
         /*
          * Old service now cancelled

@@ -472,6 +472,12 @@ class ServiceManager
         }
 
         $this->cancelServiceNow($activeService, $comment);
+
+        /*
+         * The void membership is cancelled, new service takes its place
+         */
+        $membership->active_service = $service;
+        $membership->save();
     }
 
     /**
