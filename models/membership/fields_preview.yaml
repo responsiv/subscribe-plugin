@@ -4,7 +4,23 @@
 
 fields:
 
-    section_user:
+    _section_membership:
+        label: Active plan
+        type: section
+
+    active_service[service_period_start]:
+        label: Period start
+        type: datepicker
+        mode: date
+        span: auto
+
+    active_service[service_period_end]:
+        label: Period end
+        type: datepicker
+        mode: date
+        span: auto
+
+    _section_user:
         label: User details
         type: section
 
@@ -20,7 +36,7 @@ fields:
     user[phone]:
         label: Phone
 
-    section_billing:
+    _section_billing:
         label: Billing details
         type: section
 

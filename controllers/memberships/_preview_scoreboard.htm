@@ -27,14 +27,17 @@
     </div>
 <?php endif ?>
 
-<?php if ($plan = $formModel->plan): ?>
+<?php if ($activeService): ?>
     <div class="scoreboard-item title-value">
-        <h4>Plan</h4>
-        <p><?= e($plan->name) ?></p>
+        <h4>Service plan</h4>
+        <p><?= e($activeService->name) ?></p>
+        <p class="description">activated: <?= Backend::date($activeService->activated_at) ?></p>
+    </div>
+    <div class="scoreboard-item title-value">
+        <h4>Status</h4>
+        <p><?= e($activeService->status ? $activeService->status->name : 'Unknown') ?></p>
         <p class="description">
-            <a href="<?= Backend::url('responsiv/subscribe/plans/update/'.$plan->id) ?>">
-                view details
-            </a>
+            billing periods: <?= e($activeService->billing_periods ?: 0) ?>
         </p>
     </div>
 <?php endif ?>

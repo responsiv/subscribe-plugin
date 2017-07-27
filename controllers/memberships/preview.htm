@@ -7,6 +7,10 @@
 
 <?php if (!$this->fatalError): ?>
 
+    <?php
+        $showSchedule = $activeService->hasSchedule();
+    ?>
+
     <div class="scoreboard">
         <div data-control="toolbar">
             <?= $this->makePartial('preview_scoreboard') ?>
@@ -22,6 +26,9 @@
     <div class="control-tabs content-tabs tabs-inset" data-control="tab">
         <ul class="nav nav-tabs">
             <li class="active"><a href="#membership">Membership</a></li>
+            <?php if ($showSchedule): ?>
+                <li><a href="#schedule">Schedule</a></li>
+            <?php endif ?>
             <li><a href="#notifications">Notifications</a></li>
             <li><a href="#history">History</a></li>
         </ul>
@@ -31,6 +38,11 @@
                     <?= $this->makePartial('tab_membership') ?>
                 </div>
             </div>
+            <?php if ($showSchedule): ?>
+                <div class="tab-pane pane-inset">
+                    <?= $this->makePartial('tab_schedule') ?>
+                </div>
+            <?php endif ?>
             <div class="tab-pane pane-inset">
                 <?= $this->makePartial('tab_notifications') ?>
             </div>

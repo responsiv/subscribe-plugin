@@ -5,14 +5,10 @@ use Flash;
 use Backend;
 use BackendMenu;
 use Backend\Classes\Controller;
-use Backend\Behaviors\FormController;
-use Backend\Behaviors\ListController;
-use Backend\Behaviors\RelationController;
 use ValidationException;
 use RainLab\User\Models\User as UserModel;
 use Responsiv\Subscribe\Models\Plan as PlanModel;
 use Responsiv\Subscribe\Models\Membership as MembershipModel;
-
 
 /**
  * Memberships Back-end Controller
@@ -20,9 +16,9 @@ use Responsiv\Subscribe\Models\Membership as MembershipModel;
 class Memberships extends Controller
 {
     public $implement = [
-        FormController::class,
-        ListController::class,
-        RelationController::class,
+        \Backend\Behaviors\FormController::class,
+        \Backend\Behaviors\ListController::class,
+        \Backend\Behaviors\RelationController::class,
     ];
 
     public $formConfig = 'config_form.yaml';
@@ -40,7 +36,19 @@ class Memberships extends Controller
     {
         $this->vars['totalMemberships'] = MembershipModel::count();
 
-        $this->asExtension(ListController::class)->index();
+        $this->asExtension('ListController')->index();
+    }
+
+    public function preview($recordId = null, $context = null)
+    {
+        traceSql();
+        $this->asExtension('FormController')->preview($recordId, $context);
+
+        if (!$model = $this->formGetModel()) {
+            return;
+        }
+
+        $this->vars['activeService'] = $model->active_service;
     }
 
     public function onCreateMembership()

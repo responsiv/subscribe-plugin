@@ -163,6 +163,11 @@ class Service extends Model
         return !!$this->grace_days;
     }
 
+    public function hasSchedule()
+    {
+        return $this->plan && $this->plan->isRenewable() && $this->isActive();
+    }
+
     /**
      * Check if this service has unpaid invoices
      */
@@ -316,6 +321,11 @@ class Service extends Model
     //
     // Scopes
     //
+
+    public function scopeApplyWithoutActiveService($query, $service)
+    {
+        return $query->where('id', '<>', $service->active_service_id);
+    }
 
     public function scopeApplyActive($query)
     {

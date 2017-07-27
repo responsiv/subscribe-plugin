@@ -3,31 +3,15 @@
 # ===================================
 
 fields:
-    id:
-        label: ID
-        disabled: true
-
-    section_membership:
-        label: Service details
-        type: section
-
-    activated_at:
-        label: Activated
-        span: auto
 
     service_period_start:
         label: Period start
+        type: datepicker
+        mode: date
         span: auto
 
     service_period_end:
         label: Period end
-        span: auto
-
-    billing_periods:
-        label: Billing periods
-        span: auto
-
-    status:
-        label: Status
-        type: relation
+        type: datepicker
+        mode: date
         span: auto

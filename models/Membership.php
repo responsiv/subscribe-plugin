@@ -55,9 +55,15 @@ class Membership extends Model
     ];
 
     public $hasMany = [
-        'services'      => [Service::class, 'delete' => true],
-        'status_logs'   => StatusLog::class,
-        'notifications' => [NotificationLog::class, 'delete' => true],
+        'services'        => [Service::class, 'delete' => true],
+        'status_logs'     => StatusLog::class,
+        'notifications'   => [NotificationLog::class, 'delete' => true],
+        'active_invoices' => [
+            Invoice::class,
+            'key' => 'related_id',
+            'otherKey' => 'active_service_id',
+            'conditions' => "related_type = 'subscribe-service'"
+        ],
     ];
 
     //

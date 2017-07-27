@@ -4,6 +4,7 @@ use Event;
 use Backend;
 use Responsiv\Subscribe\Classes\SubscriptionEngine;
 use RainLab\User\Models\User as UserModel;
+use October\Rain\Database\Relations\Relation;
 use System\Classes\PluginBase;
 
 /**
@@ -51,6 +52,10 @@ class Plugin extends PluginBase
      */
     public function boot()
     {
+        Relation::morphMap([
+            'subscribe-service' => \Responsiv\Subscribe\Models\Service::class
+        ]);
+
         $this->extendUserModel();
     }
 
@@ -62,9 +67,9 @@ class Plugin extends PluginBase
     public function registerComponents()
     {
         return [
-            'Responsiv\Subscribe\Components\Subscribe'  => 'subscribe',
-            'Responsiv\Subscribe\Components\Payment'    => 'subscribePayment',
-            'Responsiv\Subscribe\Components\PlanList'   => 'subscribePlanList',
+            \Responsiv\Subscribe\Components\Subscribe::class  => 'subscribe',
+            \Responsiv\Subscribe\Components\Payment::class    => 'subscribePayment',
+            \Responsiv\Subscribe\Components\PlanList::class   => 'subscribePlanList',
         ];
     }
 
@@ -156,7 +161,7 @@ class Plugin extends PluginBase
     protected function extendUserModel()
     {
         UserModel::extend(function($model) {
-            $model->implement[] = 'Responsiv.Subscribe.Behaviors.SubscriberModel';
+            $model->implement[] = \Responsiv\Subscribe\Behaviors\SubscriberModel::class;
         });
     }
 }

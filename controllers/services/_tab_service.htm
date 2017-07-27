@@ -1,12 +1,7 @@
-<div class="row">
-    <div class="col-sm-4">
-        <?= $this->formRenderPreview() ?>
-    </div>
-    <div class="col-sm-8">
-        <div class="field-section">
-            <h4>Invoices</h4>
-        </div>
+<?= $this->formRenderPreview() ?>
 
-        <?= $this->relationRender('invoices') ?>
-    </div>
+<div class="field-section">
+    <h4>Invoices</h4>
 </div>
+
+<?= $this->relationRender('invoices') ?>

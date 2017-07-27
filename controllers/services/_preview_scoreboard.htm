@@ -1,7 +1,7 @@
 <div class="scoreboard-item title-value">
     <h4>Service</h4>
     <p># <?= $formModel->id ?></p>
-    <p class="description">created: <?= Backend::date($formModel->created_at) ?></p>
+    <p class="description">activated: <?= Backend::date($formModel->activated_at) ?></p>
 </div>
 <div class="scoreboard-item title-value">
     <h4>Status</h4>
@@ -23,3 +23,11 @@
         </p>
     </div>
 <?php endif ?>
+
+<div class="scoreboard-item title-value">
+    <h4>Status</h4>
+    <p><?= e($formModel->status ? $formModel->status->name : 'Unknown') ?></p>
+    <p class="description">
+        billing periods: <?= e($formModel->billing_periods ?: 0) ?>
+    </p>
+</div>
