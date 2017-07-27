@@ -110,7 +110,7 @@ class Plugin extends PluginBase
     {
         return [
             'subscribe' => [
-                'label'       => 'Subscribers',
+                'label'       => 'Subscriptions',
                 'url'         => Backend::url('responsiv/subscribe/memberships'),
                 'icon'        => 'icon-newspaper-o',
                 'iconSvg'     => 'plugins/responsiv/subscribe/assets/images/subscribe-icon.svg',
