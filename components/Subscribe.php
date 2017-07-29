@@ -160,6 +160,9 @@ class Subscribe extends ComponentBase
 
         $this->page['newPlan'] = $plan = PlanModel::find(post('selected_plan'));
         $this->page['samePlan'] = (!$service = $membership->active_service) || $plan->id == $service->plan_id;
+        $this->page['switchPrice'] = $plan->getSwitchPrice($service);
+        $this->page['isDowngrade'] = $plan->isDowngrade($service);
+        $this->page['isUpgrade'] = $plan->isUpgrade($service);
     }
 
     public function onUpdateConfirm()

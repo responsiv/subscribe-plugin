@@ -113,7 +113,7 @@ class MembershipManager
              * Override price if this is an upgrade or downgrade
              */
             else {
-                $price = max($plan->price - $oldService->price, 0);
+                $price = $plan->getSwitchPrice($oldService);
             }
         }
 

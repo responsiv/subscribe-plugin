@@ -219,6 +219,30 @@ class Plan extends Model
         return Setting::get('is_trial_inclusive');
     }
 
+    /**
+     * Returns the price to switch to this plan from another.
+     */
+    public function getSwitchPrice(Service $service)
+    {
+        return max($this->price - $service->price, 0);
+    }
+
+    /**
+     * Returns true if switching to this plan is a downgrade.
+     */
+    public function isDowngrade(Service $service)
+    {
+        return $service->price > $this->price;
+    }
+
+    /**
+     * Returns true if switching to this plan is an upgrade.
+     */
+    public function isUpgrade(Service $service)
+    {
+        return $this->price > $service->price;
+    }
+
     //
     // Attributes
     //
