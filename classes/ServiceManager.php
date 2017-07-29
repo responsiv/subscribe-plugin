@@ -43,6 +43,7 @@ class ServiceManager
             'membership' => null,
             'invoice' => null,
             'plan' => null,
+            'price' => null
         ], $options));
 
         if (!$plan = $plan ?: $service->plan) {
@@ -83,7 +84,7 @@ class ServiceManager
         $service->setup_price = $plan->setup_price;
         $service->renewal_period = $plan->renewal_period;
         $service->first_invoice = $invoice;
-        $service->first_invoice_item = $this->invoiceManager->raiseServiceInvoiceItem($invoice, $service);
+        $service->first_invoice_item = $this->invoiceManager->raiseServiceInvoiceItem($invoice, $service, $price);
 
         /*
          * Trial period

@@ -86,6 +86,7 @@ class Service extends Model
     {
         extract(array_merge([
             'delay' => null,
+            'price' => null
         ], $options));
 
         $service = static::updateOrCreate([
@@ -104,6 +105,7 @@ class Service extends Model
         ServiceManager::instance()->initService($service, [
             'membership' => $membership,
             'plan' => $plan,
+            'price' => $price
         ]);
 
         return $service;

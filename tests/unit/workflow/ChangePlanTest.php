@@ -39,9 +39,12 @@ class ChangePlanTest extends PluginTestCase
     /**
      * When a user changes their plan, whilst active on another, the old
      * service should be cancelled and a new service created on the new
-     * plan. The remaining credit from the old plan is forfeited.
+     * plan. The remaining credit from the old plan is forfeited, however,
+     * the pricing difference between the plans is taken in to account.
+     *
+     * $10 plan -> $20 plan = cost to upgrade: $10.00
      */
-    public function testWorkflow_Active_NewPlan_Now()
+    public function testWorkflow_Active_NewPlan_Now_Upgrade()
     {
         $this->setUpPlans();
 
@@ -54,6 +57,7 @@ class ChangePlanTest extends PluginTestCase
         $this->assertEquals(Status::STATUS_ACTIVE, $service->status->code);
         $this->assertEquals(1, $service->isActive());
         $this->assertEquals($membership->active_service_id, $service->id);
+        $this->assertEquals(10, $invoice->total);
 
         /*
          * Emulate in the wild
@@ -79,6 +83,81 @@ class ChangePlanTest extends PluginTestCase
          */
         $invoice = $newService->first_invoice;
         $invoice->submitManualPayment('Testing');
+        $this->assertEquals(1000 - 10, $invoice->total);
+
+        /*
+         * Emulate in the wild
+         */
+        $now = $this->timeTravelDay(1);
+        $this->workerProcess();
+
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
+        $newService = Service::find($newService->id);
+
+        /*
+         * Membership active
+         */
+        $this->assertEquals($membership->active_service_id, $newService->id);
+
+        /*
+         * Old service now cancelled
+         */
+        $this->assertEquals(Status::STATUS_ACTIVE, $newService->status->code);
+        $this->assertEquals(Status::STATUS_CANCELLED, $service->status->code);
+        $this->assertEquals(0, $service->isActive());
+        $this->assertEquals(1, $newService->isActive());
+    }
+
+    /**
+     * As opposed to an upgrade, a downgrade does not require payment. An invoice
+     * is raised that is immediately paid. The remaining credit from the old plan 
+     * is forfeited.
+     *
+     * $20 plan -> $10 plan = cost to upgrade: nil
+     */
+    public function testWorkflow_Active_NewPlan_Now_Downgrade()
+    {
+        $this->setUpPlans();
+
+        $this->newPlan->price = 5;
+        $this->newPlan->save();
+
+        /*
+         * Start with basic plan
+         */
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->generatePaidMembership();
+        $this->assertNotNull($plan, $membership, $service, $service->status, $invoice, $invoice->status);
+
+        $this->assertEquals(Status::STATUS_ACTIVE, $service->status->code);
+        $this->assertEquals(1, $service->isActive());
+        $this->assertEquals($membership->active_service_id, $service->id);
+        $this->assertEquals(10, $invoice->total);
+
+        /*
+         * Emulate in the wild
+         */
+        $now = $this->timeTravelDay(1);
+        $this->workerProcess();
+
+        /*
+         * Change to the new plan
+         */
+        $newService = MembershipManager::instance()->switchPlanNow($membership, $this->newPlan);
+        list($user, $plan, $membership, $service, $invoice) = $payload = $this->reloadMembership($payload);
+
+        /*
+         * Old plan should remain active until payment
+         */
+        $this->assertEquals(Status::STATUS_ACTIVE, $service->status->code);
+        $this->assertEquals(Status::STATUS_NEW, $newService->status->code);
+        $this->assertEquals(1, $newService->is_throwaway);
+
+        /*
+         * Pay the new plan
+         */
+        $invoice = $newService->first_invoice;
+        $this->assertEquals(0, $invoice->total);
+        SubscriptionEngine::instance()->attemptFirstPayment($invoice);
 
         /*
          * Emulate in the wild

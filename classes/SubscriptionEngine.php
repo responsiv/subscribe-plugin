@@ -126,6 +126,15 @@ class SubscriptionEngine
         }
     }
 
+    public function attemptFirstPayment(InvoiceModel $invoice)
+    {
+        if ($invoice->isPaymentProcessed()) {
+            return;
+        }
+
+        $this->invoiceManager->attemptFirstPayment($invoice);
+    }
+
     /**
      * Called at the end of a service period, this will raise an invoice, if not
      * existing already, and try to pay it.

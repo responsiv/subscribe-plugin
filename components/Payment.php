@@ -7,7 +7,7 @@ use Cms\Classes\ComponentBase;
 use Responsiv\Pay\Models\Invoice as InvoiceModel;
 use Responsiv\Pay\Models\PaymentMethod as TypeModel;
 use Responsiv\Pay\Models\UserProfile as UserProfileModel;
-use Responsiv\Subscribe\Classes\InvoiceManager;
+use Responsiv\Subscribe\Classes\SubscriptionEngine;
 use Illuminate\Http\RedirectResponse;
 use ApplicationException;
 
@@ -103,11 +103,7 @@ class Payment extends ComponentBase
 
     protected function checkFirstPayment($invoice)
     {
-        if ($invoice->isPaymentProcessed()) {
-            return;
-        }
-
-        InvoiceManager::instance()->attemptFirstPayment($invoice);
+        SubscriptionEngine::instance()->attemptFirstPayment($invoice);
     }
 
     //

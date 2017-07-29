@@ -99,23 +99,30 @@ class MembershipManager
             'atTermEnd' => true,
         ], $options));
 
-        /*
-         * Determine delay based on old service, if found
-         */
         $delay = null;
+        $price = null;
 
-        if (
-            $atTermEnd &&
-            ($oldService = $membership->active_service)
-        ) {
-            $delay = $oldService->service_period_end;
+        if ($oldService = $membership->active_service) {
+            /*
+             * Determine delay based on old service, if found
+             */
+            if ($atTermEnd) {
+                $delay = $oldService->service_period_end;
+            }
+            /*
+             * Override price if this is an upgrade or downgrade
+             */
+            else {
+                $price = max($plan->price - $oldService->price, 0);
+            }
         }
 
         /*
          * Raise new service
          */
         $service = ServiceModel::createForMembership($membership, $plan, [
-            'delay' => $delay
+            'delay' => $delay,
+            'price' => $price
         ]);
 
         return $service;

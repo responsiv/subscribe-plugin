@@ -135,7 +135,7 @@ class InvoiceManager
     /**
      * Populates an invoices items, returns the primary item.
      */
-    public function raiseServiceInvoiceItem(InvoiceModel $invoice, ServiceModel $service)
+    public function raiseServiceInvoiceItem(InvoiceModel $invoice, ServiceModel $service, $price = null)
     {
         if (!$plan = $service->plan) {
             throw new ApplicationException('Service is missing a plan!');
@@ -154,7 +154,7 @@ class InvoiceManager
         $item->invoice = $invoice;
         $item->quantity = 1;
         $item->tax_class_id = $plan->tax_class_id;
-        $item->price = $this->getPriceForService($service);
+        $item->price = $price !== null ? $price : $this->getPriceForService($service);
         $item->description = $plan->name;
         $item->related = $service;
         $item->save();
