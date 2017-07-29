@@ -3,6 +3,12 @@
 # ===================================
 
 fields:
+    is_active:
+        label: Active
+        type: checkbox
+        comment: Uncheck this box to archive this plan.
+        default: true
+
     name:
         tab: Plan
         span: auto

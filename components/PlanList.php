@@ -32,7 +32,7 @@ class PlanList extends ComponentBase
             return $this->plans;
         }
 
-        return $this->plans = PlanModel::all();
+        return $this->plans = PlanModel::applyActive()->get();
     }
 
     public function hasPaidPlans()

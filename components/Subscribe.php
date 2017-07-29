@@ -46,6 +46,35 @@ class Subscribe extends ComponentBase
         return Page::sortBy('baseFileName')->lists('baseFileName', 'baseFileName');
     }
 
+    /**
+     * Returns the logged in user, if available, and touches
+     * the last seen timestamp.
+     * @return RainLab\User\Models\User
+     */
+    public function user()
+    {
+        if (!$user = Auth::getUser()) {
+            return null;
+        }
+
+        return $user;
+    }
+
+    public function membership($throw = false)
+    {
+        if (!$user = $this->user()) {
+            if ($throw) throw new ApplicationException('Please log in first.');
+            else return false;
+        }
+
+        if (!$membership = $user->membership) {
+            if ($throw) throw new ApplicationException('User has no membership.');
+            else return false;
+        }
+
+        return $membership;
+    }
+
     public function paymentPage()
     {
         return $this->property('paymentPage');
@@ -158,8 +187,8 @@ class Subscribe extends ComponentBase
     {
         $membership = $this->membership(true);
 
-        $this->page['newPlan'] = $plan = PlanModel::find(post('selected_plan'));
-        $this->page['samePlan'] = (!$service = $membership->active_service) || $plan->id == $service->plan_id;
+        $this->page['newPlan'] = $plan = $this->findPlan(post('selected_plan'));
+        $this->page['samePlan'] = ($service = $membership->active_service) && $plan->id == $service->plan_id;
         $this->page['switchPrice'] = $plan->getSwitchPrice($service);
         $this->page['isDowngrade'] = $plan->isDowngrade($service);
         $this->page['isUpgrade'] = $plan->isUpgrade($service);
@@ -169,7 +198,7 @@ class Subscribe extends ComponentBase
     {
         $membership = $this->membership(true);
 
-        if (!$plan = PlanModel::find(post('selected_plan'))) {
+        if (!$plan = $this->findPlan(post('selected_plan'))) {
             throw new ApplicationException('Unable to locate the selected plan!');
         }
 
@@ -196,6 +225,32 @@ class Subscribe extends ComponentBase
             $this->paymentPage(),
             ['hash' => $invoice->hash]
         ));
+    }
+
+    public function onLoadResumeConfirmForm()
+    {
+        $membership = $this->membership(true);
+
+        $this->page['newPlan'] = $plan = $this->findPlan(post('selected_plan'));
+        $this->page['isFree'] = ($service = $membership->active_service) && $plan->id == $service->plan_id && $service->isDelayCancelled();
+    }
+
+    public function onResumeConfirm()
+    {
+        $membership = $this->membership(true);
+        $plan = $this->findPlan(post('selected_plan'));
+        $service = $membership->active_service;
+
+        if ($plan->id == $service->plan_id && $service->isDelayCancelled()) {
+            $service->resumeService();
+
+            Flash::success('Service resumed');
+
+            return Redirect::refresh();
+        }
+        else {
+            return $this->onUpdateConfirm();
+        }
     }
 
     public function onLoadCancelConfirmForm()
@@ -256,13 +311,18 @@ class Subscribe extends ComponentBase
     // Common
     //
 
+    protected function findPlan($planId)
+    {
+        return PlanModel::applyActive()->find($planId);
+    }
+
     protected function createMembership($user, $isGuest = false)
     {
         if (!$planId = post('selected_plan')) {
             throw new ValidationException(['selected_plan' => 'Plan missing!']);
         }
 
-        if (!$plan = PlanModel::find($planId)) {
+        if (!$plan = $this->findPlan($planId)) {
             throw new ValidationException(['selected_plan' => 'Plan missing!']);
         }
 
@@ -299,34 +359,5 @@ class Subscribe extends ComponentBase
         $invoice->touchTotals();
 
         return $invoice;
-    }
-
-    /**
-     * Returns the logged in user, if available, and touches
-     * the last seen timestamp.
-     * @return RainLab\User\Models\User
-     */
-    public function user()
-    {
-        if (!$user = Auth::getUser()) {
-            return null;
-        }
-
-        return $user;
-    }
-
-    public function membership($throw = false)
-    {
-        if (!$user = $this->user()) {
-            if ($throw) throw new ApplicationException('Please log in first.');
-            else return false;
-        }
-
-        if (!$membership = $user->membership) {
-            if ($throw) throw new ApplicationException('User has no membership.');
-            else return false;
-        }
-
-        return $membership;
     }
 }

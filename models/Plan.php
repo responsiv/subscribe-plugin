@@ -28,13 +28,13 @@ class Plan extends Model
     public $rules = [
         'name' => 'required',
         'price' => 'required|numeric',
-        'setup_price' => 'numeric',
-        'membership_fee' => 'numeric',
-        'renewal_period' => 'numeric',
-        'plan_day_interval' => 'numeric',
-        'plan_month_day' => 'numeric',
-        'plan_month_interval' => 'numeric',
-        'plan_year_interval' => 'numeric',
+        'setup_price' => 'nullable|numeric',
+        'membership_fee' => 'nullable|numeric',
+        'renewal_period' => 'nullable|numeric',
+        'plan_day_interval' => 'nullable|numeric',
+        'plan_month_day' => 'nullable|numeric',
+        'plan_month_interval' => 'nullable|numeric',
+        'plan_year_interval' => 'nullable|numeric',
     ];
 
     /**
@@ -92,6 +92,15 @@ class Plan extends Model
     }
 
     //
+    // Scopes
+    //
+
+    public function scopeApplyActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    //
     // Options
     //
 
@@ -129,6 +138,11 @@ class Plan extends Model
     //
     // Utils
     //
+
+    public function isActive()
+    {
+        return $this->is_active;
+    }
 
     public function isFree()
     {

@@ -120,6 +120,17 @@ class Service extends Model
     }
 
     /**
+     * Resume a service that is scheduled to be cancelled
+     */
+    public function resumeService()
+    {
+        if ($this->isDelayCancelled()) {
+            $this->delay_cancelled_at = null;
+            $this->save();
+        }
+    }
+
+    /**
      * Check if the service is scheduled to be cancelled.
      */
     public function isCancelled()
@@ -137,6 +148,16 @@ class Service extends Model
         }
 
         return true;
+    }
+
+    public function isDelayCancelled()
+    {
+        return $this->isCancelled() && $this->isActive();
+    }
+
+    public function getCancelDate()
+    {
+        return $this->cancelled_at ?: $this->delay_cancelled_at;
     }
 
     /**

@@ -15,6 +15,7 @@ class CreatePlansTable extends Migration
             $table->string('name')->nullable();
             $table->string('code')->nullable();
             $table->text('features')->nullable();
+            $table->boolean('is_active')->default(false);
 
             $table->decimal('price', 15, 2)->default(0);
             $table->decimal('setup_price', 15, 2)->nullable();

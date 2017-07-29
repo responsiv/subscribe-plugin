@@ -38,4 +38,25 @@ class SubscriberModel extends ModelBehavior
     {
         return !!$this->model->membership;
     }
+
+    public function activeSubscription()
+    {
+        if ($this->hasMembership()) {
+            return $this->model->membership->active_service;
+        }
+    }
+
+    public function subscriptionIsCancelled()
+    {
+        if ($service = $this->activeSubscription()) {
+            return $service->isCancelled();
+        }
+    }
+
+    public function subscriptionIsActive()
+    {
+        if ($service = $this->activeSubscription()) {
+            return $service->isActive();
+        }
+    }
 }
