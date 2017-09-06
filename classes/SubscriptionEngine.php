@@ -128,11 +128,24 @@ class SubscriptionEngine
 
     public function attemptFirstPayment(InvoiceModel $invoice)
     {
+        /*
+         * Already paid
+         */
         if ($invoice->isPaymentProcessed()) {
             return;
         }
 
-        $this->invoiceManager->attemptFirstPayment($invoice);
+        /*
+         * No payment needed yet
+         */
+        if (!$invoice->isPastDueDate()) {
+            return;
+        }
+
+        /*
+         * Attempt auto payment
+         */
+        $this->invoiceManager->attemptAutomaticPayment($invoice);
     }
 
     /**

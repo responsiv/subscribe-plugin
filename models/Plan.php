@@ -66,6 +66,10 @@ class Plan extends Model
 
     public function filterFields($fields, $context = null)
     {
+        if (!isset($fields->plan_type)) {
+            return;
+        }
+
         $planType = $this->plan_type ?: self::TYPE_MONTHLY;
 
         if ($planType != self::TYPE_MONTHLY) {

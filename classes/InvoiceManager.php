@@ -36,12 +36,6 @@ class InvoiceManager
     // Invoicing
     //
 
-    public function attemptFirstPayment(InvoiceModel $invoice)
-    {
-        // Check trial date
-        $this->attemptAutomaticPayment($invoice);
-    }
-
     public function attemptAutomaticPayment(InvoiceModel $invoice)
     {
         /*

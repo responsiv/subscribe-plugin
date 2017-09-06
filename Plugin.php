@@ -115,20 +115,26 @@ class Plugin extends PluginBase
                 'icon'        => 'icon-newspaper-o',
                 'iconSvg'     => 'plugins/responsiv/subscribe/assets/images/subscribe-icon.svg',
                 'permissions' => ['subscribe.*'],
-                'order'       => 490,
+                'order'       => 510,
 
                 'sideMenu' => [
                     'memberships' => [
                         'label'       => 'Memberships',
                         'icon'        => 'icon-users',
                         'url'         => Backend::url('responsiv/subscribe/memberships'),
-                        'permissions' => ['pay.*'],
+                        'permissions' => ['subscribe.*'],
                     ],
                     'plans' => [
                         'label'       => 'Plans',
                         'icon'        => 'icon-clipboard',
                         'url'         => Backend::url('responsiv/subscribe/plans'),
-                        'permissions' => ['pay.*'],
+                        'permissions' => ['subscribe.*'],
+                    ],
+                    'settings' => [
+                        'label'       => 'Settings',
+                        'icon'        => 'icon-cog',
+                        'url'         => Backend::url('system/settings/update/responsiv/subscribe/settings'),
+                        'permissions' => ['subscribe.*'],
                     ]
                 ]
             ]

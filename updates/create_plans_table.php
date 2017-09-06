@@ -13,7 +13,9 @@ class CreatePlansTable extends Migration
             $table->increments('id');
 
             $table->string('name')->nullable();
-            $table->string('code')->nullable();
+            $table->string('sku')->nullable();
+            $table->text('short_description')->nullable();
+            $table->text('description')->nullable();
             $table->text('features')->nullable();
             $table->boolean('is_active')->default(false);
 

@@ -50,3 +50,5 @@ A subscription plan has the following properties:
 ### How the subscription engine works
 
 The subscription engine uses services and invoices to determine whether a specific subscription is active for a user. When someone purchases a subscription, the system creates a membership for them, if one does not exist already. An instance of the subscription plan, called a service, will be added to the membership, along with the first invoice.
+
+Once the customer pays the invoice, the service and membership become active for the plan interval. 
