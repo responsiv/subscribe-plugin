@@ -24,7 +24,7 @@ class ChangePlanTest extends PluginTestCase
     {
         $newPlan = new Plan;
         $newPlan->name = 'Second plan';
-        $newPlan->code = 'testing-2';
+        $newPlan->sku = 'testing-2';
         $newPlan->price = 1000;
         $newPlan->trial_days = 0;
         $newPlan->grace_days = 0;

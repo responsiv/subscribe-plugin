@@ -24,21 +24,21 @@ class CreateMembershipTest extends PluginTestCase
     {
         $plan = $this->setUpPlanDefault();
         $plan->name = 'Test1';
-        $plan->code = 'test1';
+        $plan->sku = 'test1';
         $plan->price = 10;
         $plan->save();
         $this->plan1 = $plan;
 
         $plan = $this->setUpPlanDefault();
         $plan->name = 'Test2';
-        $plan->code = 'test2';
+        $plan->sku = 'test2';
         $plan->price = 20;
         $plan->save();
         $this->plan2 = $plan;
 
         $plan = $this->setUpPlanDefault();
         $plan->name = 'Test3';
-        $plan->code = 'test3';
+        $plan->sku = 'test3';
         $plan->price = 30;
         $plan->save();
         $this->plan3 = $plan;

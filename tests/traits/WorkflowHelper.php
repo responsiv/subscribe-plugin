@@ -38,7 +38,7 @@ trait WorkflowHelper
     {
         $plan = new Plan;
         $plan->name = 'Testing';
-        $plan->code = 'testing';
+        $plan->sku = 'testing';
         $plan->price = 10;
         $plan->trial_days = 0;
         $plan->grace_days = 14;

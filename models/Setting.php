@@ -13,8 +13,9 @@ class Setting extends Model
     {
         $this->membership_price = 0;
         $this->trial_days = 0;
-        $this->is_trial_inclusive = false;
-        $this->grace_days = 14;
+        $this->is_trial_inclusive = true;
+        $this->is_card_upfront = true;
         $this->invoice_advance_days = 0;
+        $this->grace_days = 14;
     }
 }

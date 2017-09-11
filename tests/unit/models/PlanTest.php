@@ -23,7 +23,7 @@ class PlanTest extends PluginTestCase
     {
         $plan = new Plan;
         $plan->name = 'Testing';
-        $plan->code = 'testing';
+        $plan->sku = 'testing';
         $plan->price = 100;
         $plan->plan_type = Plan::TYPE_MONTHLY;
         $plan->plan_monthly_behavior = 'monthly_prorate';

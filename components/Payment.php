@@ -1,5 +1,6 @@
 <?php namespace Responsiv\Subscribe\Components;
 
+use Auth;
 use Flash;
 use Redirect;
 use Cms\Classes\Page;
@@ -8,6 +9,7 @@ use Responsiv\Pay\Models\Invoice as InvoiceModel;
 use Responsiv\Pay\Models\PaymentMethod as TypeModel;
 use Responsiv\Pay\Models\UserProfile as UserProfileModel;
 use Responsiv\Subscribe\Classes\SubscriptionEngine;
+use Responsiv\Subscribe\Models\Setting as SettingModel;
 use Illuminate\Http\RedirectResponse;
 use ApplicationException;
 
@@ -45,14 +47,13 @@ class Payment extends ComponentBase
 
     public function onRun()
     {
-        $this->page['invoice'] = $invoice = $this->invoice();
+        $this->page['invoice'] = $this->invoice();
         $this->page['paymentMethods'] = $this->paymentMethods();
         $this->page['paymentMethod'] = $this->paymentMethod();
-        $this->page['hasProfile'] = $hasProfile = $this->hasProfile();
+        $this->page['hasProfile'] = $this->hasProfile();
 
-        if ($hasProfile) {
-            $this->checkFirstPayment($invoice);
-        }
+        $this->checkFirstPayment();
+        $this->checkGuestUser();
     }
 
     public function invoice()
@@ -68,6 +69,19 @@ class Payment extends ComponentBase
         $invoice = InvoiceModel::whereHash($hash)->first();
 
         return $this->invoice = $invoice;
+    }
+
+    public function user()
+    {
+        if (!$invoice = $this->invoice()) {
+            return false;
+        }
+
+        if (!$invoice->user) {
+            return false;
+        }
+
+        return $invoice->user;
     }
 
     public function paymentMethod()
@@ -90,19 +104,44 @@ class Payment extends ComponentBase
 
     public function hasProfile()
     {
-        if (!$invoice = $this->invoice()) {
+        if (!$user = $this->user()) {
             return false;
         }
 
-        if (!$invoice->user) {
-            return false;
-        }
-
-        return UserProfileModel::userHasProfile($invoice->user);
+        return UserProfileModel::userHasProfile($user);
     }
 
-    protected function checkFirstPayment($invoice)
+    public function isCardUpfront()
     {
+        return (bool) SettingModel::get('is_card_upfront');
+    }
+
+    protected function checkGuestUser()
+    {
+        if (!$user = $this->user()) {
+            return;
+        }
+
+        if (!$user->is_guest) {
+            return;
+        }
+
+        if (!$this->isCardUpfront() || $this->hasProfile()) {
+            $user->convertToRegistered(false);
+            Auth::login($user);
+        }
+    }
+
+    protected function checkFirstPayment()
+    {
+        if (!$invoice = $this->invoice()) {
+            return;
+        }
+
+        if (!$this->hasProfile()) {
+            return;
+        }
+
         SubscriptionEngine::instance()->attemptFirstPayment($invoice);
     }
 
