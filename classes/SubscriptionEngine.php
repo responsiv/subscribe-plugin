@@ -136,13 +136,6 @@ class SubscriptionEngine
         }
 
         /*
-         * No payment needed yet
-         */
-        if (!$invoice->isPastDueDate()) {
-            return;
-        }
-
-        /*
          * Attempt auto payment
          */
         $this->invoiceManager->attemptAutomaticPayment($invoice);

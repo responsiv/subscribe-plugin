@@ -142,6 +142,13 @@ class Payment extends ComponentBase
             return;
         }
 
+        /*
+         * No payment needed yet
+         */
+        if (!$invoice->isPastDueDate()) {
+            return;
+        }
+
         SubscriptionEngine::instance()->attemptFirstPayment($invoice);
     }
 
