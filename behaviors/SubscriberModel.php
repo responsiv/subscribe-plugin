@@ -46,6 +46,13 @@ class SubscriberModel extends ModelBehavior
         }
     }
 
+    public function subscriptionIsTrial()
+    {
+        if ($this->hasMembership()) {
+            return $this->model->membership->isTrialActive();
+        }
+    }
+
     public function subscriptionIsCancelled()
     {
         if ($service = $this->activeSubscription()) {

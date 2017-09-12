@@ -9,6 +9,7 @@ use Responsiv\Subscribe\Models\Setting as SettingModel;
 use Responsiv\Subscribe\Models\StatusLog as StatusLogModel;
 use Responsiv\Subscribe\Models\Membership as MembershipModel;
 use Responsiv\Pay\Models\Invoice as InvoiceModel;
+use RainLab\User\Models\User as UserModel;
 use Responsiv\Pay\Models\InvoiceStatus as InvoiceStatusModel;
 use Exception;
 
@@ -82,6 +83,36 @@ class SubscriptionEngine
             $invoice->related instanceof ServiceModel
         ) {
             $this->receivePayment($invoice->related, $invoice);
+        }
+    }
+
+    //
+    // Membership
+    //
+
+    public function activateTrial(UserModel $user)
+    {
+        if (
+            !$user ||
+            !$user->subscriptionIsTrial() ||
+            (!$membership = $user->membership) ||
+            (!$service = $membership->active_service) ||
+            (!$invoice = $service->first_invoice)
+        ) {
+            return;
+        }
+
+        /*
+         * Keep invoice and service
+         */
+        if ($service->is_throwaway) {
+            $service->is_throwaway = false;
+            $service->save();
+        }
+
+        if ($invoice->is_throwaway) {
+            $invoice->is_throwaway = false;
+            $invoice->save();
         }
     }
 

@@ -47,13 +47,15 @@ class Payment extends ComponentBase
 
     public function onRun()
     {
+        $this->page['user'] = $this->user();
         $this->page['invoice'] = $this->invoice();
         $this->page['paymentMethods'] = $this->paymentMethods();
         $this->page['paymentMethod'] = $this->paymentMethod();
         $this->page['hasProfile'] = $this->hasProfile();
+        $this->page['isCardUpfront'] = $this->isCardUpfront();
 
         $this->checkFirstPayment();
-        $this->checkGuestUser();
+        $this->checkTrialActivation();
     }
 
     public function invoice()
@@ -116,20 +118,37 @@ class Payment extends ComponentBase
         return (bool) SettingModel::get('is_card_upfront');
     }
 
-    protected function checkGuestUser()
+    protected function checkTrialActivation()
     {
         if (!$user = $this->user()) {
             return;
         }
 
-        if (!$user->is_guest) {
+        if (!$user->subscriptionIsTrial()) {
             return;
         }
 
-        if (!$this->isCardUpfront() || $this->hasProfile()) {
+        /*
+         * Activate if no card is required, otherwise the user has a payment profile
+         */
+        $activateTrial = !$this->isCardUpfront() || $this->hasProfile();
+
+        if (!$activateTrial) {
+            return;
+        }
+
+        /*
+         * Convert guest and sign in
+         */
+        if ($user->is_guest) {
             $user->convertToRegistered(false);
             Auth::login($user);
         }
+
+        /*
+         * Activate trial
+         */
+        SubscriptionEngine::instance()->activateTrial($user);
     }
 
     protected function checkFirstPayment()
@@ -142,9 +161,6 @@ class Payment extends ComponentBase
             return;
         }
 
-        /*
-         * No payment needed yet
-         */
         if (!$invoice->isPastDueDate()) {
             return;
         }
