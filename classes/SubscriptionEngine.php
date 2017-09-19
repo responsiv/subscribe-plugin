@@ -113,6 +113,8 @@ class SubscriptionEngine
         if ($invoice->is_throwaway) {
             $invoice->is_throwaway = false;
             $invoice->save();
+
+            $invoice->updateInvoiceStatus(InvoiceStatusModel::STATUS_APPROVED);
         }
     }
 
