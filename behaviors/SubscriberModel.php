@@ -46,6 +46,13 @@ class SubscriberModel extends ModelBehavior
         }
     }
 
+    public function subscriptionTrialEnd()
+    {
+        if ($this->hasMembership()) {
+            return $this->model->membership->trial_period_end;
+        }
+    }
+
     public function subscriptionIsTrial()
     {
         if ($this->hasMembership()) {
