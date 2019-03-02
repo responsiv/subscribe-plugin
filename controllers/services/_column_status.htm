@@ -1,0 +1,27 @@
+<?php
+    $icon = 'pause';
+    $badge = 'primary';
+
+    if ($value == 'Pending' || $value == 'New') {
+        $icon = 'pause';
+        $badge = 'default';
+    }
+    elseif ($value == 'Grace' || $value == 'Trial') {
+        $icon = 'step-forward';
+        $badge = 'info';
+    }
+    elseif ($value == 'Cancelled' || $value == 'Past Due') {
+        $icon = 'stop';
+        $badge = 'danger';
+    }
+    elseif ($value == 'Active') {
+        $icon = 'play';
+        $badge = 'success';
+    }
+?>
+<span style="white-space: nowrap">
+    <span class="list-badge badge-<?= $badge ?>">
+        <i class="<?= $icon ? 'icon-'.$icon : '' ?>"></i>
+    </span>
+    <?= $value ?: 'Unknown' ?>
+</span>

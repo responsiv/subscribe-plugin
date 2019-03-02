@@ -1,0 +1,47 @@
+subject = "Membership status changed: {{ membership_id }}"
+description = "Sent to the store team members on new membership."
+==
+This message is to inform you that membership #{membership_id} has changed its status from {membership_previous_status} to {membership_status_name}.
+
+Status transition comment: {membership_status_comment}
+
+**Membership details**
+
+- Membership #{{ membership_id }}
+- Original Start Date: {{ membership_original_start }}
+- Original End Date: {{ membership_original_end }}
+- Current Start Date: {{ membership_start }}
+- Current End Date: {{ membership_end}  }
+- Next Assessment: {{ membership_accessment }}
+- Activate On: {{ membership_activated }}
+- Cancelled On: {{ membership_cancelled }}
+- Current Period: {{ membership_period }}
+
+**Invoice details**
+
+- Order **#{order_id}**, created on **{order_date}**
+- Subtotal: **{order_subtotal}**
+- Shipping: **{order_shipping_quote}**
+- Tax: **{order_tax}**
+- Discount total: **{cart_discount}**
+- Total: **{order_total}**
+
+Coupon: {order_coupon}
+
+Customer notes:
+
+```
+{customer_notes}
+```
+
+**Order items**
+
+{membership_order_content}
+
+**Customer details**
+
+- Billing name: {billing_customer_name}
+- Billing address: {membership_billing_address}
+
+- Shipping name: {shipping_customer_name}
+- Shipping address: {membership_shipping_address}

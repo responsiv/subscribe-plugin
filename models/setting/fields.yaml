@@ -1,0 +1,50 @@
+# ===================================
+#  Field Definitions
+# ===================================
+
+fields:
+
+    _section_membership:
+        label: Membership
+        type: section
+
+    membership_price:
+        label: Membership price
+        type: currency
+        comment: Specify a membership establishment fee for all plans.
+        span: left
+
+    _section_trial:
+        label: Trial
+        type: section
+
+    trial_days:
+        label: Trial period (days)
+        comment: Specify the number of free days given to a new membership.
+        span: left
+
+    is_trial_inclusive:
+        label: Inclusive trial period
+        comment: Include the trial as credit towards the first renewal period.
+        type: checkbox
+        span: left
+
+    is_card_upfront:
+        label: Require card upfront
+        comment: A valid card is required to join using a trial.
+        type: checkbox
+        span: left
+
+    _section_invoice:
+        label: Invoicing
+        type: section
+
+    invoice_advance_days:
+        label: Invoice reminder (days)
+        comment: Specify how many days an invoice should be sent before renewal.
+        span: left
+
+    grace_days:
+        label: Grace period (days)
+        comment: Specify the number of days where a membership can be unpaid but still active.
+        span: left

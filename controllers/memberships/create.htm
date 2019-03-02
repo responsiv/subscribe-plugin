@@ -1,0 +1,48 @@
+<?php Block::put('breadcrumb') ?>
+    <ul>
+        <li><a href="<?= Backend::url('responsiv/subscribe/memberships') ?>">Memberships</a></li>
+        <li><?= e($this->pageTitle) ?></li>
+    </ul>
+<?php Block::endPut() ?>
+
+<?php if (!$this->fatalError): ?>
+
+    <?= Form::open(['class' => 'layout']) ?>
+
+        <div class="callout fade in callout-info">
+            <div class="content">
+                <p>
+                    Use this form to create a new membership for a user.
+                    This process cannot be used to modify existing memberships.
+                </p>
+            </div>
+        </div>
+
+        <div class="layout-row">
+            <?= $this->formRender() ?>
+        </div>
+
+        <div class="form-buttons">
+            <div class="loading-indicator-container">
+                <button
+                    type="submit"
+                    data-request="onCreateMembership"
+                    data-hotkey="ctrl+s, cmd+s"
+                    data-load-indicator="Creating Membership..."
+                    class="btn btn-primary">
+                    Create
+                </button>
+                <span class="btn-text">
+                    or <a href="<?= Backend::url('responsiv/subscribe/memberships') ?>">Cancel</a>
+                </span>
+            </div>
+        </div>
+
+    <?= Form::close() ?>
+
+<?php else: ?>
+
+    <p class="flash-message static error"><?= e($this->fatalError) ?></p>
+    <p><a href="<?= Backend::url('responsiv/subscribe/memberships') ?>" class="btn btn-default">Return to memberships list</a></p>
+
+<?php endif ?>

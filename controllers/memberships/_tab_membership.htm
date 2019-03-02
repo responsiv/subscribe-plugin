@@ -1,0 +1,22 @@
+<div class="row">
+    <div class="col-sm-4">
+        <?= $this->formRenderPreview() ?>
+    </div>
+    <div class="col-sm-8">
+        <div class="pull-right">
+            <a href="<?= Backend::url('responsiv/subscribe/services/preview/'.$activeService->id) ?>">
+                View all invoices
+            </a>
+        </div>
+        <div class="field-section">
+            <h4>Recent invoices</h4>
+        </div>
+        <?= $this->relationRender('active_invoices') ?>
+
+
+        <div class="field-section">
+            <h4>Previous plans</h4>
+        </div>
+        <?= $this->relationRender('services') ?>
+    </div>
+</div>

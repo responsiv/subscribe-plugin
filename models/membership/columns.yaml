@@ -1,0 +1,32 @@
+# ===================================
+#  List Column Definitions
+# ===================================
+
+columns:
+
+    id:
+        label: ID
+        searchable: true
+        width: 100px
+
+    user_name:
+        label: User
+        relation: user
+        select: name
+        sortable: false
+
+    user_email:
+        label: User
+        relation: user
+        select: email
+        sortable: false
+
+    trial_period_start:
+        label: Trial Period Start
+        type: date
+        invisible: true
+
+    trial_period_end:
+        label: Trial Period End
+        type: date
+        invisible: true

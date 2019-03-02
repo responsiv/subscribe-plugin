@@ -1,0 +1,56 @@
+# ===================================
+#  List Column Definitions
+# ===================================
+
+columns:
+    status:
+        label: Status
+        relation: status
+        select: name
+        sortable: false
+        type: partial
+        path: $/responsiv/subscribe/controllers/services/_column_status.htm
+
+    plan_name:
+        label: Plan
+        relation: plan
+        select: name
+        sortable: false
+
+    activated_at:
+        label: Activated On
+        type: date
+
+    service_period_start:
+        label: Period Start
+        type: date
+        invisible: true
+
+    service_period_end:
+        label: Period End
+        type: date
+        invisible: true
+
+    price:
+        label: Price
+        type: currency
+
+    delay_activated_at:
+        label: Activate On
+        type: date
+        invisible: true
+
+    cancelled_at:
+        label: Cancelled On
+        type: date
+        invisible: true
+
+    delay_cancelled_at:
+        label: Delay Cancelled
+        type: date
+        invisible: true
+
+    expired_at:
+        label: Expired On
+        type: date
+        invisible: true

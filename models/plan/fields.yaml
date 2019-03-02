@@ -1,0 +1,153 @@
+# ===================================
+#  Form Field Definitions
+# ===================================
+
+fields:
+    name:
+        span: auto
+        label: Name
+
+    sku:
+        span: auto
+        label: SKU
+
+tabs:
+    fields:
+
+        is_active:
+            label: Active
+            type: checkbox
+            comment: Uncheck this box to archive this plan.
+            default: true
+            tab: Plan
+
+        short_description:
+            label: Short description
+            type: textarea
+            size: small
+            tab: Plan
+
+        description:
+            label: Long description
+            type: richeditor
+            tab: Plan
+
+        features:
+            label: Features
+            type: repeater
+            tab: Plan
+            form:
+                fields:
+                    name:
+                        label: Feature
+
+        tax_class:
+            tab: Pricing
+            label: Tax Class
+            type: relation
+            emptyOption: - use default -
+
+        price:
+            tab: Pricing
+            label: Price
+            comment: Enter the price for each renewal of this subscription.
+            type: currency
+            span: left
+
+        setup_price:
+            tab: Pricing
+            label: Setup price
+            comment: A one time fee added when activating or switching to this plan.
+            type: currency
+            span: right
+
+        plan_type:
+            tab: Pricing
+            label: Membership schedule
+            comment: Please choose a frequency the subscription will be renewed.
+            type: dropdown
+            default: monthly
+            span: left
+
+        plan_day_interval:
+            tab: Pricing
+            label: Renewal interval (days)
+            comment: Number of days the subscription should run before next renewal.
+            dependsOn: plan_type
+            type: number
+            span: right
+
+        plan_month_interval:
+            tab: Pricing
+            label: Renewal interval (months)
+            comment: Number of months the subscription should run before next renewal.
+            dependsOn: plan_type
+            type: number
+            span: right
+
+        plan_year_interval:
+            tab: Pricing
+            label: Renewal interval (years)
+            comment: Number of years the subscription should run before next renewal.
+            dependsOn: plan_type
+            type: number
+            span: right
+
+        plan_monthly_behavior:
+            tab: Pricing
+            label: Monthly behavior
+            commentAbove: Please select a monthly behavior for the subscription renewal.
+            type: radio
+            dependsOn: plan_type
+
+        plan_month_day:
+            tab: Pricing
+            label: Day of month
+            comment: Please choose a month day the subscription will be renewed on.
+            type: dropdown
+            dependsOn: [plan_type, plan_monthly_behavior]
+
+        renewal_period:
+            tab: Pricing
+            label: Renewal cycles
+            comment: Number of renewal before the subscription ends. Leave the field empty for unlimited renewals.
+            dependsOn: plan_type
+            type: number
+            span: left
+
+        is_custom_membership:
+            tab: Pricing
+            label: Custom membership rules
+            comment: Override settings for new members when selecting this plan.
+            type: checkbox
+
+        membership_price:
+            tab: Pricing
+            span: auto
+            label: Membership price
+            type: currency
+            comment: A one time fee added when establishing a membership, with this plan selected.
+            trigger:
+                action: hide
+                field: is_custom_membership
+                condition: unchecked
+
+        trial_days:
+            tab: Pricing
+            span: auto
+            label: Trial period (days)
+            comment: Specify the number of free days given to a new membership.
+            trigger:
+                action: hide
+                field: is_custom_membership
+                condition: unchecked
+
+        grace_days:
+            tab: Pricing
+            span: auto
+            label: Grace period (days)
+            comment: Specify the number of days where a plan can be unpaid but still active.
+            trigger:
+                action: hide
+                field: is_custom_membership
+                condition: unchecked

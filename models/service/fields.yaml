@@ -1,0 +1,17 @@
+# ===================================
+#  Form Field Definitions
+# ===================================
+
+fields:
+
+    service_period_start:
+        label: Period start
+        type: datepicker
+        mode: date
+        span: auto
+
+    service_period_end:
+        label: Period end
+        type: datepicker
+        mode: date
+        span: auto

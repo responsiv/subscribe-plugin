@@ -1,0 +1,43 @@
+<div class="scoreboard-item title-value">
+    <h4>Membership</h4>
+    <p># <?= $formModel->id ?></p>
+    <p class="description">created: <?= Backend::date($formModel->created_at) ?></p>
+</div>
+
+<?php if ($user = $formModel->user): ?>
+    <?php
+        $userLink = Backend::url('rainlab/user/users/preview/'.$user->id);
+    ?>
+    <div class="scoreboard-item title-value">
+        <h4>User</h4>
+        <p><?= $user->name ?></p>
+        <p class="description">
+            <a href="<?= $userLink ?>">
+                <?= $user->email ?>
+            </a>
+        </p>
+    </div>
+<?php else: ?>
+    <div class="scoreboard-item title-value">
+        <h4>User</h4>
+        <p><em>Unknown user</em></p>
+        <p class="description">
+            This user may have deactivated their account.
+        </p>
+    </div>
+<?php endif ?>
+
+<?php if ($activeService): ?>
+    <div class="scoreboard-item title-value">
+        <h4>Service plan</h4>
+        <p><?= e($activeService->name) ?></p>
+        <p class="description">activated: <?= Backend::date($activeService->activated_at) ?></p>
+    </div>
+    <div class="scoreboard-item title-value">
+        <h4>Status</h4>
+        <p><?= e($activeService->status ? $activeService->status->name : 'Unknown') ?></p>
+        <p class="description">
+            billing periods: <?= e($activeService->billing_periods ?: 0) ?>
+        </p>
+    </div>
+<?php endif ?>

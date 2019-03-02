@@ -1,0 +1,63 @@
+# ===================================
+#  Form Field Definitions
+# ===================================
+
+fields:
+
+    _section_membership:
+        label: Active plan
+        type: section
+
+    active_service[service_period_start]:
+        label: Period start
+        type: datepicker
+        mode: date
+        span: auto
+
+    active_service[service_period_end]:
+        label: Period end
+        type: datepicker
+        mode: date
+        span: auto
+
+    _section_user:
+        label: User details
+        type: section
+
+    user[name]:
+        label: Name
+
+    user[email]:
+        label: Email
+
+    user[company]:
+        label: Company
+
+    user[phone]:
+        label: Phone
+
+    _section_billing:
+        label: Billing details
+        type: section
+
+    # payment_method:
+    #     label: Payment method
+
+    user[street_addr]:
+        label: Street address
+
+    user[city]:
+        label: City
+        span: auto
+
+    user[state][name]:
+        label: State
+        span: auto
+
+    user[zip]:
+        label: Zip / Postcode
+        span: auto
+
+    user[country][name]:
+        label: Country
+        span: auto

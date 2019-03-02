@@ -1,0 +1,31 @@
+# ===================================
+#  Form Behavior Config
+# ===================================
+
+# Record name
+name: Service
+
+# Model Form Field configuration
+form: $/responsiv/subscribe/models/service/fields.yaml
+
+# Model Class name
+modelClass: Responsiv\Subscribe\Models\Service
+
+# Default redirect location
+defaultRedirect: responsiv/subscribe/services
+
+# Create page
+create:
+    title: Create Service
+    redirect: responsiv/subscribe/services/update/:id
+    redirectClose: responsiv/subscribe/services
+
+# Update page
+update:
+    title: Edit Service
+    redirect: responsiv/subscribe/services
+    redirectClose: responsiv/subscribe/services
+
+# Preview page
+preview:
+    title: Preview Service

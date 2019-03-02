@@ -1,0 +1,18 @@
+# ===================================
+#  Form Field Definitions
+# ===================================
+
+fields:
+
+    user:
+        label: Linked to User
+        type: recordfinder
+        list: $/rainlab/user/models/user/columns.yaml
+        prompt: Click the %s button to find a user
+        nameFrom: name
+        descriptionFrom: email
+
+    selected_plan:
+        label: Selected plan
+        type: radio
+        required: true
