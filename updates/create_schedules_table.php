@@ -14,7 +14,7 @@ class CreateSchedulesTable extends Migration
             $table->integer('billing_period')->nullable();
             $table->decimal('price', 15, 2)->default(0);
             $table->text('comment')->nullable();
-            $table->integer('membership_id')->unsigned()->nullable()->index();
+            $table->integer('service_id')->unsigned()->nullable()->index();
             $table->timestamps();
         });
     }

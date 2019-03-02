@@ -7,7 +7,6 @@ use Model;
  */
 class Schedule extends Model
 {
-
     /**
      * @var string The database table used by the model.
      */
@@ -35,5 +34,4 @@ class Schedule extends Model
     public $morphMany = [];
     public $attachOne = [];
     public $attachMany = [];
-
 }

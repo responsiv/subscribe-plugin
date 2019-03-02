@@ -1,7 +1,21 @@
 <?php
     $schedules = $activeService->getSchedule();
 ?>
-<div class="control-list">
+<div class="toolbar-widget list-header">
+    <div class="control-toolbar">
+        <div class="toolbar-item toolbar-primary">
+            <div data-control="toolbar">
+                <a
+                    href="javascript:;"
+                    onclick="editSchedulePriceSelected()"
+                    class="btn btn-secondary oc-icon-pencil">
+                    Change Price
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="control-list" data-control="listwidget" id="scheduleList">
     <table class="table data" data-control="rowlink">
         <thead>
             <tr>
@@ -24,11 +38,11 @@
                     <tr>
                         <td class="list-checkbox nolink">
                             <div class="checkbox custom-checkbox nolabel">
-                                <input id="checkbox_<?= $index ?>" type="checkbox" />
+                                <input id="checkbox_<?= $index ?>" type="checkbox" name="list_ids[]" value="<?= e($schedule->period) ?>" />
                                 <label for="checkbox_<?= $index ?>">Check</label>
                             </div>
                         </td>
-                        <td><?= e($schedule->period) ?></td>
+                        <td><a href="javascript:;" onclick="editSchedulePrice('<?= e($schedule->period) ?>')"><?= e($schedule->period) ?></a></td>
                         <td><?= e($schedule->period_start->toFormattedDateString()) ?></td>
                         <td><?= e($schedule->period_end->toFormattedDateString()) ?></td>
                         <td><?= Currency::format($schedule->total) ?></td>
