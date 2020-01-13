@@ -5,7 +5,7 @@
     - create_services_table.php
     - create_statuses_table.php
     - create_status_logs_table.php
-    - create_schedule_table.php
+    - create_schedules_table.php
     - create_notification_logs_table.php
 1.0.2:
     - Seed table data
